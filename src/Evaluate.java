@@ -8,12 +8,12 @@ import java.util.*;
  */
 public class Evaluate {
 
-    static HashMap<String, String> predictedSegmentations = new HashMap<String, String>();
-    static HashMap<String, String> incorrectSegmentations = new HashMap<String, String>();
-    static HashMap<String, String> correctSegmentations = new HashMap<String, String>();
+    static Map<String, String> predictedSegmentations = new HashMap<String, String>();
+    static Map<String, String> incorrectSegmentations = new HashMap<String, String>();
+    static Map<String, String> correctSegmentations = new HashMap<String, String>();
 
-    static HashSet<Integer> getSegPoints(String segmentation) {
-        HashSet<Integer> segPoints = new HashSet<Integer>();
+    static Set<Integer> getSegPoints(String segmentation) {
+        Set<Integer> segPoints = new HashSet<Integer>();
         int i=0;
         for(char ch : segmentation.toCharArray()) {
             if(ch == '-')
@@ -24,13 +24,13 @@ public class Evaluate {
         return segPoints;
     }
 
-    static double [] evaluateSegmentationPoints(String predSeg, ArrayList<String> goldSegs) {
+    static double [] evaluateSegmentationPoints(String predSeg, List<String> goldSegs) {
         //find the best match over different points
         double bestCorrect = 0., bestTotal =0., minBestTotal = 100.;
-        HashSet<Integer> predPoints = getSegPoints(predSeg);
+        Set<Integer> predPoints = getSegPoints(predSeg);
         int predSize = predPoints.size();
         for(String goldSeg : goldSegs) {
-            HashSet<Integer> goldPoints = getSegPoints(goldSeg);
+            Set<Integer> goldPoints = getSegPoints(goldSeg);
             int goldSize = goldPoints.size();
             goldPoints.retainAll(predPoints); //IMP  : goldPoints is modified here to get the intersection of points
             int correct = goldPoints.size();
@@ -58,7 +58,7 @@ public class Evaluate {
         incorrectSegmentations.clear();
         correctSegmentations.clear();
 
-        for(Pair<String, ArrayList<String>> entry : MorphoChain.goldSegs) {
+        for(Pair<String, List<String>> entry : MorphoChain.goldSegs) {
             //segment without explicit chain
             String predSeg = MorphoChain.segment(entry.getKey());
 
@@ -87,7 +87,7 @@ public class Evaluate {
     }
 
 
-    private static void printSegmentations(HashMap<String, String> segmentations) {
+    private static void printSegmentations(Map<String, String> segmentations) {
         //print the segmentations
         for(Map.Entry<String, String> entry : segmentations.entrySet())
             System.out.println(entry.getKey()+" # "+entry.getValue());

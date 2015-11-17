@@ -28,7 +28,7 @@ public class Tools {
         return max + java.lang.Math.log(sum);
     }
 
-    public static double logSumOfExponentials(ArrayList<Double> x) {
+    public static double logSumOfExponentials(List<Double> x) {
         double [] xs = new double[x.size()];
         for(int i=0;i<x.size(); i++)
             xs[i] = x.get(i);
@@ -37,8 +37,8 @@ public class Tools {
 
     static double dot(String a, String b) {
         double sum = 0.;
-        ArrayList<Double> vec1 = MorphoChain.wordVec.get(a);
-        ArrayList<Double> vec2 = MorphoChain.wordVec.get(b);
+        List<Double> vec1 = MorphoChain.wordVec.get(a);
+        List<Double> vec2 = MorphoChain.wordVec.get(b);
         if(vec1==null || vec2==null) return -0.5; //FIXME - make sure not using just plain DOT
         for(int i=0; i < vec1.size(); i++)
             sum += vec1.get(i) * vec2.get(i);
@@ -46,7 +46,7 @@ public class Tools {
     }
 
     //dot product of feature and weights(global)
-    static double featureWeightProduct(HashMap<Integer, Double> features) {
+    static double featureWeightProduct(Map<Integer, Double> features) {
         double sum = 0.;
         if(features==null || features.size()==0) return 0.;
         for(int i : features.keySet())
@@ -56,7 +56,7 @@ public class Tools {
     }
 
     //add values from one map to another (weighted by factor)
-    static void updateMap(HashMap<Integer, Double> a, HashMap<Integer, Double> b, double factor) {
+    static void updateMap(Map<Integer, Double> a, Map<Integer, Double> b, double factor) {
         for(int key : b.keySet()) {
             if (a.containsKey(key))
                 a.put(key, a.get(key) + b.get(key) * factor);
@@ -65,7 +65,7 @@ public class Tools {
         }
     }
 
-    static void updateMap(HashMap<Integer, Double> a, HashMap<Integer, Double> b) {
+    static void updateMap(Map<Integer, Double> a, Map<Integer, Double> b) {
         updateMap(a, b, 1.);
     }
 
@@ -117,14 +117,13 @@ public class Tools {
     }
 
     //sort map
-    public static
-    <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+    public static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
         List<T> list = new ArrayList<T>(c);
         java.util.Collections.sort(list);
         return list;
     }
 
-    static void addFeature(HashMap<Integer, Double> features, String newFeature, double value) {
+    static void addFeature(Map<Integer, Double> features, String newFeature, double value) {
         int featureIndex = getFeatureIndex(newFeature);
         if(featureIndex!=-1)
             features.put(featureIndex,value);
@@ -146,7 +145,7 @@ public class Tools {
             map.put(key, value+1);
     }
 
-    public static double[] convertHashMap(HashMap<String, Double> map) {
+    public static double[] convertMap(Map<String, Double> map) {
         double [] values = new double[map.size()];
         int i =0;
         for(double val : map.values() )  {
@@ -156,9 +155,9 @@ public class Tools {
         return values;
     }
 
-    public static HashMap<String, Double> normalizeHashMap(HashMap<String, Double> map) {
-        HashMap<String, Double> newMap = new HashMap<String, Double>();
-        double [] values = convertHashMap(map);
+    public static Map<String, Double> normalizeMap(Map<String, Double> map) {
+        Map<String, Double> newMap = new HashMap<String, Double>();
+        double [] values = convertMap(map);
         double Z = sum(values);
 
         for(String key : map.keySet()) {
@@ -168,8 +167,8 @@ public class Tools {
         return newMap;
     }
 
-    static HashMap<String, Double> getFeatureNames(String word, String parent, int type) {
-        HashMap<String, Double> features = new HashMap<String, Double>();
+    static Map<String, Double> getFeatureNames(String word, String parent, int type) {
+        Map<String, Double> features = new HashMap<String, Double>();
         for(Map.Entry<Integer, Double> entry : MorphoChain.getFeatures(word, parent, type).entrySet())
             features.put(MorphoChain.index2Feature.get(entry.getKey()), MorphoChain.weights.get(entry.getKey()));
 
@@ -180,20 +179,20 @@ public class Tools {
         MorphoChain.weights.set(MorphoChain.feature2Index.get(feature), weight);
     }
 
-    static HashSet<String> clone(HashSet<String> map) {
-        HashSet<String> newMap = new HashSet<String>();
+    static Set<String> clone(Set<String> map) {
+        Set<String> newMap = new HashSet<String>();
         for(String key : map)
             newMap.add(key);
         return newMap;
     }
 
 
-    static HashMap<String, Map<String, Double>> computeAffixCorrelation(LinkedHashSet<String> affixes, char type) throws IOException {
+    static Map<String, Map<String, Double>> computeAffixCorrelation(LinkedHashSet<String> affixes, char type) throws IOException {
         System.out.print("Computing affix correlation - " + type + " ...");
         String [] affixArray = new String[affixes.size()];
         affixArray = affixes.toArray(affixArray);
         double[][] correlationMatrix = new double[affixArray.length][affixArray.length];
-        HashMap<String, HashSet<String>> affix2Word = new HashMap<String, HashSet<String>>();
+        Map<String, Set<String>> affix2Word = new HashMap<String, Set<String>>();
         for(String affix : affixArray) {
             affix2Word.put(affix, new HashSet<String>());
             for(String word : MorphoChain.word2Cnt.keySet())
@@ -203,20 +202,20 @@ public class Tools {
                     affix2Word.get(affix).add(word.substring(affix.length()));
         }
 
-        HashMap<String, Map<String, Double>> affixNeighbor = new HashMap<String, Map<String, Double>>();
+        Map<String, Map<String, Double>> affixNeighbor = new HashMap<String, Map<String, Double>>();
         for(int i=0;i<affixArray.length;i++) {
-            int bestJ = 0;
+            //int bestJ = 0;
             double bestCorrelation = 0.;
-            HashMap<String, Double> neighbor2Score = new HashMap<String, Double>();
+            Map<String, Double> neighbor2Score = new HashMap<String, Double>();
             for (int j = 0; j < affixArray.length; j++)
                 if (i != j) {
-                    HashSet<String> tmp = Tools.clone(affix2Word.get(affixArray[i]));
+                    Set<String> tmp = Tools.clone(affix2Word.get(affixArray[i]));
                     tmp.retainAll(affix2Word.get(affixArray[j]));
                     correlationMatrix[i][j] = ((double) tmp.size()) / affix2Word.get(affixArray[i]).size();
                     neighbor2Score.put(affixArray[j], correlationMatrix[i][j]);
                     if(correlationMatrix[i][j] > bestCorrelation) {
                         bestCorrelation = correlationMatrix[i][j];
-                        bestJ = j;
+                        //bestJ = j;
                     }
                 }
 
@@ -228,7 +227,7 @@ public class Tools {
     }
 
 
-    public static double entropy(ArrayList<Sample.MultinomialObject> multinomial) {
+    public static double entropy(List<Sample.MultinomialObject> multinomial) {
         double entropy = 0;
         for(Sample.MultinomialObject obj : multinomial) {
             entropy -= obj.score * Math.log(obj.score);
@@ -236,7 +235,7 @@ public class Tools {
         return entropy;
     }
 
-    public static double maxValue(ArrayList<Sample.MultinomialObject> multinomial) {
+    public static double maxValue(List<Sample.MultinomialObject> multinomial) {
         double maxVal = -Double.MAX_VALUE;
         for(Sample.MultinomialObject obj : multinomial) {
             if(obj.score > maxVal)

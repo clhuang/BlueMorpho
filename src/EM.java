@@ -1,9 +1,13 @@
 import lbfgsb.LBFGSBException;
 import lbfgsb.Minimizer;
 import lbfgsb.Result;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -13,29 +17,29 @@ import java.util.HashSet;
  */
 public class EM {
 
-    HashMap<String, HashMap<String, Double>> word2Parent2logProb = new HashMap<String, HashMap<String, Double>>();
+    Map<String, Map<String, Double>> word2Parent2logProb = new HashMap<String, Map<String, Double>>();
     //USE the same weights map as in Model2
 
     static double functionValue; //update every EStep - to be used by optimizer
-    static HashMap<Integer, Double> featureGradients = new HashMap<Integer, Double>();
+    static Map<Integer, Double> featureGradients = new HashMap<Integer, Double>();
 
-    static HashMap<String, ArrayList<String>> word2Neighbors = new HashMap<String, ArrayList<String>>();
+    static Map<String, List<String>> word2Neighbors = new HashMap<String, List<String>>();
 
 
     EM() {}
 
-    static ArrayList<String> getNeighbors(String word) {
+    static List<String> getNeighbors(String word) {
 
         if(word2Neighbors.containsKey(word))
             return word2Neighbors.get(word);
 
         //get a random subset of neighbors (maybe by transposing characters?)
         int NUM_NEIGHBORS = 5;
-        ArrayList<String> neighbors = new ArrayList<String>();
+        List<String> neighbors = new ArrayList<String>();
         neighbors.add(word); //word is in its own neighbors set
 
         //generate neighbors
-        HashSet<Integer> positions = new HashSet<Integer>();
+        Set<Integer> positions = new HashSet<Integer>();
 
         //prefix positions
         for(int i=0;i<NUM_NEIGHBORS;i++) {
@@ -79,12 +83,13 @@ public class EM {
         double val = 0.;
 
         //calculate for word first (hard EM_ON - choose only the best for the word)
-        ArrayList<Pair<String, Integer>> candidates = MorphoChain.getCandidates(word, false);
+        List<Pair<String, Integer>> candidates = MorphoChain.getCandidates(word, false);
         double logScore, bestScore = - Double.MAX_VALUE;
-        HashMap<Integer, Double> bestFeatures = new HashMap<Integer, Double>();
+        Map<Integer, Double> bestFeatures = new HashMap<Integer, Double>();
+        /*
         Pair<String, Integer> bestParent = null;
         for(Pair<String, Integer> parent : candidates) {
-            HashMap<Integer, Double> features = MorphoChain.getFeatures(word, parent.getKey(), parent.getValue());
+            Map<Integer, Double> features = MorphoChain.getFeatures(word, parent.getKey(), parent.getValue());
             logScore = Tools.featureWeightProduct(features);
             if(logScore > bestScore) {
                 bestScore = logScore;
@@ -93,18 +98,19 @@ public class EM {
             }
         }
         String myParent = bestParent.getKey();
+        */
         val += bestScore;
         Tools.updateMap(featureGradients, bestFeatures);
 
         //evaluate the neighbors
-        ArrayList<String> neighbors = getNeighbors(word);
-        ArrayList<Double> ZParts = new ArrayList<Double>();
-        HashMap<Integer, Double> neighborhoodFeatures = new HashMap<Integer, Double>();
+        List<String> neighbors = getNeighbors(word);
+        List<Double> ZParts = new ArrayList<Double>();
+        Map<Integer, Double> neighborhoodFeatures = new HashMap<Integer, Double>();
         for(String neighbor : neighbors) {
             candidates = MorphoChain.getCandidates(neighbor, false);
             for(Pair<String, Integer> parent : candidates) {
-                HashMap<Integer, Double> features = MorphoChain.getFeatures(neighbor, parent.getKey(), parent.getValue());
-                HashMap<String, Double> feature2Val = new HashMap<String, Double>();
+                Map<Integer, Double> features = MorphoChain.getFeatures(neighbor, parent.getKey(), parent.getValue());
+                Map<String, Double> feature2Val = new HashMap<String, Double>();
                 for(int featureID : features.keySet())
                     feature2Val.put(MorphoChain.index2Feature.get(featureID), features.get(featureID));
                 logScore = Tools.featureWeightProduct(features);
@@ -130,12 +136,12 @@ public class EM {
         double val = 0.;
 
         //calculate for word first
-        ArrayList<Pair<String, Integer>> candidates = MorphoChain.getCandidates(word, false);
+        List<Pair<String, Integer>> candidates = MorphoChain.getCandidates(word, false);
         double logScore;
-        ArrayList<Double> numeratorParts = new ArrayList<Double>();
-        HashMap<Integer, Double> wordFeatures = new HashMap<Integer, Double>();
+        List<Double> numeratorParts = new ArrayList<Double>();
+        Map<Integer, Double> wordFeatures = new HashMap<Integer, Double>();
         for(Pair<String, Integer> parent : candidates) {
-            HashMap<Integer, Double> features = MorphoChain.getFeatures(word, parent.getKey(), parent.getValue());
+            Map<Integer, Double> features = MorphoChain.getFeatures(word, parent.getKey(), parent.getValue());
             logScore = Tools.featureWeightProduct(features);
             if(parent.getRight() == MorphoChain.STOP) logScore += Math.log(MorphoChain.STOP_FACTOR);
             numeratorParts.add(logScore);
@@ -145,14 +151,14 @@ public class EM {
         Tools.updateMap(featureGradients, wordFeatures, 1./Math.exp(val)); //IMP : have to sum in the soft EM_ON case
 
         //evaluate the neighbors
-        ArrayList<String> neighbors = getNeighbors(word);
-        ArrayList<Double> ZParts = new ArrayList<Double>();
-        HashMap<Integer, Double> neighborhoodFeatures = new HashMap<Integer, Double>();
+        List<String> neighbors = getNeighbors(word);
+        List<Double> ZParts = new ArrayList<Double>();
+        Map<Integer, Double> neighborhoodFeatures = new HashMap<Integer, Double>();
         for(String neighbor : neighbors) {
             candidates = MorphoChain.getCandidates(neighbor, false);
             for(Pair<String, Integer> parent : candidates) {
-                HashMap<Integer, Double> features = MorphoChain.getFeatures(neighbor, parent.getKey(), parent.getValue());
-                HashMap<String, Double> feature2Val = new HashMap<String, Double>();
+                Map<Integer, Double> features = MorphoChain.getFeatures(neighbor, parent.getKey(), parent.getValue());
+                Map<String, Double> feature2Val = new HashMap<>();
                 for(int featureID : features.keySet())
                     feature2Val.put(MorphoChain.index2Feature.get(featureID), MorphoChain.weights.get(featureID));
                 logScore = Tools.featureWeightProduct(features);
@@ -167,8 +173,8 @@ public class EM {
         Tools.updateMap(featureGradients, neighborhoodFeatures, -1./Math.exp(logZ));
 
         //for debug
-        HashMap<String, Double> name2Gradient = new HashMap<String, Double>();
-        HashMap<String, Double> name2Gradient2 = new HashMap<String, Double>();
+        Map<String, Double> name2Gradient = new HashMap<String, Double>();
+        Map<String, Double> name2Gradient2 = new HashMap<String, Double>();
         for(int key : wordFeatures.keySet())
             name2Gradient.put(MorphoChain.index2Feature.get(key), wordFeatures.get(key));
 

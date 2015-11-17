@@ -2,6 +2,7 @@ import lbfgsb.DifferentiableFunction;
 import lbfgsb.FunctionValues;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ghostof2007 on 5/6/14.
@@ -99,12 +100,12 @@ public class Function implements DifferentiableFunction {
             return grad;
         }
 
-        HashMap<Integer, Double> featureGradient = new HashMap<Integer, Double>();
+        Map<Integer, Double> featureGradient = new HashMap<Integer, Double>();
         //TODO : parallelizable
         for(String word : MorphoChain.word2Cnt.keySet()) {
             if(MorphoChain.word2Cnt.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
-            HashMap<Integer, Double> tmpMapC = MorphoChain.gradObjective(word, true);
-            HashMap<Integer, Double> tmpMapD = MorphoChain.gradObjective(word, false);
+            Map<Integer, Double> tmpMapC = MorphoChain.gradObjective(word, true);
+            Map<Integer, Double> tmpMapD = MorphoChain.gradObjective(word, false);
 
             Tools.updateMap(featureGradient, tmpMapC);      // to take care of heuristic - rest case
             Tools.updateMap(featureGradient, tmpMapD, -1.); //TODO : check if necessary

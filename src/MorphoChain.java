@@ -61,17 +61,17 @@ public class MorphoChain {
     static String ALPHABET="qwertyuiopasdfghjklzxcvbnm";
 
 
-    static HashMap<String, ArrayList<Double>> wordVec = new HashMap<String, ArrayList<Double>>();
-    static HashMap<String, Integer> word2Cnt = new HashMap<String, Integer>();
-    static ArrayList<Pair<String, ArrayList<String>>> goldSegs = new ArrayList<Pair<String, ArrayList<String>>>();
-    static HashMap<String, ArrayList<String>> goldSegmentations = new HashMap<String, ArrayList<String>>();
-    static HashMap<String, Integer> feature2Index = new HashMap<String, Integer>();
-    static ArrayList<String> index2Feature = new ArrayList<String>();
-    static ArrayList<Double> weights = new ArrayList<Double>();
-    static HashMap<String, Double> word2MaxDot  = new HashMap<String, Double>();
+    static Map<String, List<Double>> wordVec = new HashMap<String, List<Double>>();
+    static Map<String, Integer> word2Cnt = new HashMap<String, Integer>();
+    static List<Pair<String, List<String>>> goldSegs = new ArrayList<Pair<String, List<String>>>();
+    static Map<String, List<String>> goldSegmentations = new HashMap<String, List<String>>();
+    static Map<String, Integer> feature2Index = new HashMap<String, Integer>();
+    static List<String> index2Feature = new ArrayList<String>();
+    static List<Double> weights = new ArrayList<Double>();
+    static Map<String, Double> word2MaxDot  = new HashMap<String, Double>();
 
     //for producing segmentations
-    static HashMap<String, ArrayList<String>> testList = new HashMap<String, ArrayList<String>>();
+    static Map<String, ArrayList<String>> testList = new HashMap<String, ArrayList<String>>();
 
     //for debugging
     static Map<String, Double> feature2Weight = new HashMap<String, Double>();
