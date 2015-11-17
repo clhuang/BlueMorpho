@@ -71,22 +71,22 @@ public class MorphoChain {
     static Map<String, Double> word2MaxDot  = new HashMap<String, Double>();
 
     //for producing segmentations
-    static Map<String, ArrayList<String>> testList = new HashMap<String, ArrayList<String>>();
+    static Map<String, List<String>> testList = new HashMap<String, List<String>>();
 
     //for debugging
     static Map<String, Double> feature2Weight = new HashMap<String, Double>();
 
     //affixes
-    static LinkedHashSet<String> prefixes = new LinkedHashSet<String>();
-    static LinkedHashSet<String> suffixes = new LinkedHashSet<String>();
-    static HashMap<String, Map<String, Double>> suffixNeighbor = new HashMap<String, Map<String, Double>>();
-    static HashMap<String, Map<String, Double>> prefixNeighbor = new HashMap<String, Map<String, Double>>();
-    static HashMap<String, Double> suffixDist = new HashMap<String, Double>();
-    static HashMap<String, Double> prefixDist = new HashMap<String, Double>();
+    static Set<String> prefixes = new LinkedHashSet<String>();
+    static Set<String> suffixes = new LinkedHashSet<String>();
+    static Map<String, Map<String, Double>> suffixNeighbor = new HashMap<String, Map<String, Double>>();
+    static Map<String, Map<String, Double>> prefixNeighbor = new HashMap<String, Map<String, Double>>();
+    static Map<String, Double> suffixDist = new HashMap<String, Double>();
+    static Map<String, Double> prefixDist = new HashMap<String, Double>();
 
     //caching of features
-    static HashMap<String, HashMap<String, HashMap<Integer, HashMap<Integer, Double>>>> w2P2TypeFeatures
-            = new HashMap<String, HashMap<String, HashMap<Integer, HashMap<Integer, Double>>>>();
+    static Map<String, Map<String, Map<Integer, Map<Integer, Double>>>> w2P2TypeFeatures
+            = new HashMap<String, Map<String, Map<Integer, Map<Integer, Double>>>>();
 
     Function func;
 
@@ -99,7 +99,7 @@ public class MorphoChain {
                 sb = new StringBuilder();
                 sb.append(line);
                 String[] parts = sb.toString().split(" ");
-                ArrayList<Double> vector = new ArrayList<Double>();
+                List<Double> vector = new ArrayList<Double>();
                 String word = parts[0];
                 for(int i=1;i<Math.min(VECTOR_SIZE + 1, parts.length);i++) {
                     vector.add(Double.parseDouble(parts[i]));
@@ -145,11 +145,11 @@ public class MorphoChain {
                 sb.append(line);
                 String[] parts = sb.toString().split("[: ]");
                 String word = parts[0];
-                ArrayList<String> segmentations = new ArrayList<String>();
+                List<String> segmentations = new ArrayList<String>();
                 for(int i=1;i<parts.length; i++)
                     segmentations.add(parts[i]);
                 goldSegmentations.put(word, segmentations);
-                goldSegs.add(new MutablePair<String, ArrayList<String>>(word, segmentations));
+                goldSegs.add(new MutablePair<String, List<String>>(word, segmentations));
 
                 //inductive mode
                 if(INDUCTIVE)
@@ -195,7 +195,7 @@ public class MorphoChain {
     // -------------------------------------- Features ------------------------------------------------
 
     //Get the feature for word-parent pair
-    static HashMap<Integer, Double> getFeatures(String word, String parent, int type) {
+    static Map<Integer, Double> getFeatures(String word, String parent, int type) {
         //check feature cache
         if(checkCacheExists(word, parent, type))
             return  w2P2TypeFeatures.get(word).get(parent).get(type);
@@ -203,13 +203,13 @@ public class MorphoChain {
 
         //stop features
         if(type == STOP || parent.equals(word)) {
-             HashMap<Integer, Double> stopFeatures = getStopFeatures(word);
+             Map<Integer, Double> stopFeatures = getStopFeatures(word);
              cacheFeatures(word, parent, type, stopFeatures);
              return stopFeatures;
          }
 
 
-        HashMap<Integer, Double> features = new HashMap<Integer, Double>();
+        Map<Integer, Double> features = new HashMap<Integer, Double>();
 
         //DOT
         double cosine = Tools.dot(word, parent);
@@ -398,8 +398,8 @@ public class MorphoChain {
         return features;
     }
 
-    static HashMap<Integer, Double> getStopFeatures(String word) {
-        HashMap<Integer, Double> features = new HashMap<Integer, Double>();
+    static Map<Integer, Double> getStopFeatures(String word) {
+        Map<Integer, Double> features = new HashMap<Integer, Double>();
 
         if(word.length()>=2) {  //check is only to avoid null exception
             Tools.addFeature(features, "STP_E_" + word.substring(word.length() - 2), 1.);
@@ -428,8 +428,8 @@ public class MorphoChain {
 
     //get most frequent affixes
     void selectMostFrequentAffixes() throws IOException {
-        HashMap<String, Integer> suffixCnt = new HashMap<String, Integer>();
-        HashMap<String, Integer> prefixCnt = new HashMap<String, Integer>();
+        Map<String, Integer> suffixCnt = new HashMap<String, Integer>();
+        Map<String, Integer> prefixCnt = new HashMap<String, Integer>();
         for (String word : word2Cnt.keySet()) {
             if(word2Cnt.get(word) < FREQ_THRESHOLD) continue;
             for (int i = 1; i < word.length(); i++) {
@@ -498,8 +498,8 @@ public class MorphoChain {
     // -------------------------------------- Candidate Generation ------------------------------------------------
 
     //generate all possible parent candidates - if heuristic is true, will use the heuristic to prune
-    static ArrayList<Pair<String, Integer>> getCandidates(String word, boolean heuristic) {
-        ArrayList<Pair<String, Integer>> candidates = new ArrayList<Pair<String, Integer>>();
+    static List<Pair<String, Integer>> getCandidates(String word, boolean heuristic) {
+        List<Pair<String, Integer>> candidates = new ArrayList<Pair<String, Integer>>();
 
         for(int i=1;i<word.length(); i++) {
             //suffix case
@@ -555,7 +555,7 @@ public class MorphoChain {
 
 
     //wrapper
-    static ArrayList<Pair<String, Integer>> getCandidates(String word) {
+    static List<Pair<String, Integer>> getCandidates(String word) {
         return getCandidates(word, false);  //no heuristics used
     }
 
@@ -564,12 +564,12 @@ public class MorphoChain {
 
     //predict the parent of a word
     static Pair<String, Integer> predict(String word) {
-        ArrayList<Pair<String, Integer>> candidateParents = getCandidates(word); //no need to restrict to heuristics
+        List<Pair<String, Integer>> candidateParents = getCandidates(word); //no need to restrict to heuristics
         double bestScore = -Double.MAX_VALUE, score;
         Pair<String, Integer> bestParentAndType = null;
 
         //for multinomial
-        ArrayList<Sample.MultinomialObject> multinomial = new ArrayList<Sample.MultinomialObject>();
+        List<Sample.MultinomialObject> multinomial = new ArrayList<Sample.MultinomialObject>();
         double Z = 0.;
 
         for(Pair<String, Integer> parentAndType : candidateParents ) {
@@ -599,13 +599,11 @@ public class MorphoChain {
     }
 
     //predict the top k parents of a word
-    static ArrayList<Pair<String, Integer>> predict(String word, int topK) {
-        ArrayList<Pair<String, Integer>> candidateParents = getCandidates(word); //no need to restrict to heuristics
+    static List<Pair<String, Integer>> predict(String word, int topK) {
+        List<Pair<String, Integer>> candidateParents = getCandidates(word); //no need to restrict to heuristics
         double score;
-        HashMap<Pair<String,Integer>, Double> parentDic = new HashMap<Pair<String, Integer>, Double>();
+        Map<Pair<String,Integer>, Double> parentDic = new HashMap<Pair<String, Integer>, Double>();
 
-
-        double Z = 0.;
 
         for(Pair<String, Integer> parentAndType : candidateParents ) {
             String parent = parentAndType.getKey();
@@ -615,7 +613,7 @@ public class MorphoChain {
         }
 
         //sort
-        ArrayList<Pair<String, Integer>> bestParents = new ArrayList<Pair<String, Integer>>();
+        List<Pair<String, Integer>> bestParents = new ArrayList<Pair<String, Integer>>();
         for(Pair<String, Integer> pair : Tools.sortByValue(parentDic).keySet()) {
             bestParents.add(pair);
             topK--;
@@ -627,8 +625,8 @@ public class MorphoChain {
     }
 
     //function to choose predictions from the sampled points
-    static ArrayList<Integer> predictSampledPoints(ArrayList<Integer> sampledPoints) {
-        ArrayList<Integer> points =  new ArrayList<Integer>();
+    static List<Integer> predictSampledPoints(List<Integer> sampledPoints) {
+        List<Integer> points =  new ArrayList<Integer>();
         int lastPoint = -1;
         for(int point : sampledPoints) {
             if (point == -1) break;
@@ -722,11 +720,11 @@ public class MorphoChain {
 
 
     //Functions for Caching features
-    static void cacheFeatures(String word, String parent, int type, HashMap<Integer, Double> features) {
+    static void cacheFeatures(String word, String parent, int type, Map<Integer, Double> features) {
         if(!w2P2TypeFeatures.containsKey(word))
-            w2P2TypeFeatures.put(word, new HashMap<String, HashMap<Integer, HashMap<Integer, Double>>>());
+            w2P2TypeFeatures.put(word, new HashMap<String, Map<Integer, Map<Integer, Double>>>());
         if(!w2P2TypeFeatures.get(word).containsKey(parent))
-            w2P2TypeFeatures.get(word).put(parent, new HashMap<Integer, HashMap<Integer, Double>>());
+            w2P2TypeFeatures.get(word).put(parent, new HashMap<Integer, Map<Integer, Double>>());
         if(!w2P2TypeFeatures.get(word).get(parent).containsKey(type))
             w2P2TypeFeatures.get(word).get(parent).put(type, features);
 
@@ -746,7 +744,7 @@ public class MorphoChain {
     // -------------------------------------- For LBFGS (OLD) ------------------------------------------------
     //return the heuristic sum part in the objective
     static double logSumPartObjective(String word, boolean heuristic) {
-        ArrayList<Double> A = new ArrayList<Double>();
+        List<Double> A = new ArrayList<Double>();
         for(Pair<String, Integer> parentAndType : getCandidates(word))
             A.add(Tools.featureWeightProduct(getFeatures(word, parentAndType.getKey(), parentAndType.getValue())));
 
@@ -754,9 +752,9 @@ public class MorphoChain {
     }
 
     //return the heuristic sum part in the objective
-    static HashMap<Integer, Double> gradObjective(String word, boolean heuristic) {
-        HashMap<Integer, Double> grad = new HashMap<Integer, Double>();
-        HashMap<Integer, Double> tmpMap;
+    static Map<Integer, Double> gradObjective(String word, boolean heuristic) {
+        Map<Integer, Double> grad = new HashMap<Integer, Double>();
+        Map<Integer, Double> tmpMap;
         double totalVal = 0.;
         for(Pair<String, Integer> parentAndType  : getCandidates(word)) {
             tmpMap = getFeatures(word, parentAndType.getKey(), parentAndType.getValue());

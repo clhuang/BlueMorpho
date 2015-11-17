@@ -187,7 +187,7 @@ public class Tools {
     }
 
 
-    static Map<String, Map<String, Double>> computeAffixCorrelation(LinkedHashSet<String> affixes, char type) throws IOException {
+    static Map<String, Map<String, Double>> computeAffixCorrelation(Set<String> affixes, char type) throws IOException {
         System.out.print("Computing affix correlation - " + type + " ...");
         String [] affixArray = new String[affixes.size()];
         affixArray = affixes.toArray(affixArray);
