@@ -1,8 +1,3 @@
-
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.*;
-
 /**
  * Created by ghostof2007 on 5/21/14.
  * Functions to sample chains, etc
