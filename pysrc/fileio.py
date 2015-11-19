@@ -18,14 +18,13 @@ def read_wordlist(filename):
     return d
 
 
-def read_segmentations(filename):
-    """
-    Return a dict of words to a list of segments.
-    """
-    d = {}
-    with open(filename) as f:
-        for line in f:
-            word, segments = line.split(':')
-            segments = segments.split('-')
-            d[word] = segments
+# Reads from morpho challege
+def readCorpus(filename):
+    f = open(filename, 'r')
+    d = {}  # maps word to a tuple containing segmentation and a list of tags
+    for lines in f.readlines():
+        lines = lines.split()
+        seg = [g.split(':')[0] for g in lines[1:]]
+        tags = [g.split(':')[1] for g in lines[1:]]
+        d[lines[0]] = (seg, tags)
     return d
