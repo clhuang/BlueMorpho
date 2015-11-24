@@ -1,7 +1,7 @@
 from collections import namedtuple
 import math
 import sklearn.linear_model
-imprt sklearn.feature_extraction
+import sklearn.feature_extraction
 
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
 VECTOR_SIZE = 200
@@ -67,3 +67,34 @@ class MorphoFeatureGen(object):
         d['parent_in_dict'] = 0
 
         #TODO USE dp -- extend C(w) using existing affixes and word2vec
+
+
+class MorphoGenCandidates(object):
+    def __init__(self, wordvectors):
+        self.wordvectors = wordvectors
+
+    #TODO add prunning heuristic
+    def genCandidates(word):
+        candidates = []
+        for x in xrange(int(len(word) / 2), len(word)):
+            parent = word[:x]
+            candidates.append((parent, 'SUFFIX'))
+            #planning - plan - (n)ing
+            if word[x] == word[x - 1]:
+                 candidates.append((parent, 'REPEAT'))
+            if parent[-1] in ALPHABET:
+                for l in ALPHABET:
+                    if l != parent[-1]:
+                        #Ignored lines 526-27 (checks if new parent is a word???)
+                        #and checks similiary btwn words and parents
+                        candidates.append((parent[:-1] + l, 'MODIFY'))
+            #libraries - librar(y) -ies ?? (Delete)
+            if len(parent) < len(word) - 1 and word[x:] in suffixes:
+                for l in ALPHABET:
+                    candidates.append((parent + l, 'DELETE'))
+        for x in xrange(1, int(len(word) / 2)):
+            parent = word[x:len(x)]
+            candidates.append((parent, 'PREFIX'))
+        #TODO stopping condition
+        candidates.append((word, 'STOP'))
+        return candidates
