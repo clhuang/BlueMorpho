@@ -1,4 +1,23 @@
+# Output files
+/out
+/outputs_time
+/iterate.dat
 *.class
+
+# Python compiled files
+*.pyc
+
+# LaTeX compiled files
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.pre
+*.log
+*.synctex.gz
+
+# Swap files
+*.sw?
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
