@@ -1,54 +1,80 @@
 from collections import namedtuple
 import math
+import string
+from enum import Enum
 import sklearn.linear_model
 import sklearn.feature_extraction
 
-alphabet = 'abcdefghijklmnopqrstuvwxyz'
 VECTOR_SIZE = 200
 
 ParentTransformation = namedtuple('ParentTransformation',
                                   'parentword', 'transformtype')
 
 
+class ParentType(Enum):
+    STOP = 'STOP'
+    PREFIX = 'PREFIX'
+    SUFFIX = 'SUFFIX'
+    MODIFY = 'MODIFY'
+    DELETE = 'DELETE'
+    REPEAT = 'REPEAT'
+
+
 class MorphoFeatureGen(object):
-    def __init__(self, wordvectors):
+    def __init__(self, wordvectors, vocab, alphabet=string.ascii_lowercase):
         self.wordvectors = wordvectors
 
-    def getFeatures(self, w, z):
+    def getParentsFeatures(self, w):
+        parentsAndFeatures = {}
+        for z in self.genCandidates(w):
+            parentsAndFeatures[z] = self.getFeatures(w, z)
+        z = ParentTransformation(w, ParentType.STOP)
+        parentsAndFeatures[z] = getFeatures(
+            w, z, max(d['cos'] for d in parentsAndFeatures.items()))
+        return parentsAndFeatures
+
+    def getFeatures(self, w, z, maxCosSimilarity=None):
         """
         Get features for word-parent pair
         """
         MAX_PREF_LEN = 5
         MAX_SUFF_LEN = 5
-        d = {}
-    #stop condition TODO
+        d = {'BIAS': 1}
         if len(w) == len(z.parentword):
-            return 0
-        d['parentword'] = z.parentword  #Too large?
+            if len(w) > 2:
+                d['STP_E_'] = w[:-2]
+                d['STP_B_'] = w[:2]
+            d['STP_COS_' + str(int(10 * maxCosSimilarity))] = 1
+            d['STP_LEN_' + str(len(w))] = 1
+            return d
+        d['parentword'] = z.parentword  # Too large?
         d['transformtype'] = z.transformtype
         # cosine similarity between word and parent
         d['cos'] = self.wordvectors.similarity(w, z.parentword)
+
+        lenparent = len(z.parentword)
         # affix
-        if z.transformtype == PREFIX:
-            affix = w[:len(w) - len(z.parentword)]
-            if len(affix) > MAX_PREF_LEN or affix not in list_prefix: #list of prefixes  #TODO: Maxlength of suffix is a param??
+        if z.transformtype == ParentType.PREFIX:
+            affix = w[:-lenparent]
+            # list of prefixes  #TODO: Maxlength of suffix is a param??
+            if len(affix) > MAX_PREF_LEN or affix not in list_prefix:
                 affix = "UNK"
             d['affix+type'] = "PREFIX_" + affix
             for prefix in list_prefix:
                 difference = self.wordvectors[w] - self.wordvectors[z.parentword]
                 cos_sim = self.wordvectors.similarity(difference, self.wordvectors[prefix])
                 d['diff'] = prefix + "_" + cos_sim
-        else:
-            if z.transformtype == SUFFIX:
+        else:  # some sort of suffix
+            if z.transformtype == ParentType.SUFFIX:
+                affix = w[lenparent:]
+            elif z.transformtype == ParentType.REPEAT:
+                affix = w[lenparent + 1:]
+            elif z.transformtype == ParentType.DELETE:
+                affix = w[lenparent - 1:]
+            elif z.transformtype == ParentType.MODIFY:
                 affix = w[len(z.parentword):]
-            elif z.transformtype == REPEAT:
-                affix = w[len(z.parentword) + 1:]
-                #only works for suffix
-            elif z.transformtype == DELETE:
-                affix = w[len(z.parentword) - 1:]
-            elif z.transformtype == MODIFY:
-                affix = w[len(z.parentword):]
-            if len(affix) > MAX_SUFF_LEN or affix not in list_suffix: #list of suffixes  #TODO: Maxlength of suffix is a param??
+            # list of suffixes  #TODO: Maxlength of suffix is a param??
+            if len(affix) > MAX_SUFF_LEN or affix not in list_suffix:
                 affix = "UNK"
             d['affix+type'] = "SUFFIX_" + affix
             for suffix in list_suffix:
@@ -58,43 +84,39 @@ class MorphoFeatureGen(object):
 
         # affix correlation TODO
         # parent is not in word list
-        if z.parentword not in vocab:
+        if z.parentword not in self.vocab:
             d['out_of_vocab'] = 1
         # if parent in word list - log frequency
         else:
-            d['parent_in_word_list'] = math.log10(vocab[z.parentword])
+            d['parent_in_word_list'] = math.log10(self.vocab[z.parentword])
         # presence in English dictionary
         d['parent_in_dict'] = 0
 
         #TODO USE dp -- extend C(w) using existing affixes and word2vec
 
-
-class MorphoGenCandidates(object):
-    def __init__(self, wordvectors):
-        self.wordvectors = wordvectors
-
     #TODO add prunning heuristic
-    def genCandidates(word):
+    def genCandidates(self, word):
         candidates = []
-        for x in xrange(int(len(word) / 2), len(word)):
+        for x in range(len(word) // 2, len(word)):
             parent = word[:x]
-            candidates.append((parent, 'SUFFIX'))
+            candidates.append((parent, ParentType.SUFFIX))
             #planning - plan - (n)ing
             if word[x] == word[x - 1]:
-                 candidates.append((parent, 'REPEAT'))
-            if parent[-1] in ALPHABET:
-                for l in ALPHABET:
+                candidates.append(ParentTransformation(parent, ParentType.REPEAT))
+            if parent[-1] in self.alphabet:
+                for l in self.alphabet:
                     if l != parent[-1]:
-                        #Ignored lines 526-27 (checks if new parent is a word???)
-                        #and checks similiary btwn words and parents
-                        candidates.append((parent[:-1] + l, 'MODIFY'))
-            #libraries - librar(y) -ies ?? (Delete)
+                        # Ignored lines 526-27 (checks if new parent is a word???)
+                        # and checks similiary btwn words and parents
+                        candidates.append(ParentTransformation(parent[:-1] + l, ParentType.MODIFY))
+            # libraries - librar(y) -ies ?? (Delete)
             if len(parent) < len(word) - 1 and word[x:] in suffixes:
-                for l in ALPHABET:
-                    candidates.append((parent + l, 'DELETE'))
-        for x in xrange(1, int(len(word) / 2)):
-            parent = word[x:len(x)]
-            candidates.append((parent, 'PREFIX'))
-        #TODO stopping condition
-        candidates.append((word, 'STOP'))
+                for l in self.alphabet:
+                    # TODO check if parent+l is a word
+                    candidates.append(ParentTransformation(parent + l, ParentType.DELETE))
+        for x in range(1, len(word) // 2):
+            parent = word[x:]
+            candidates.append(ParentTransformation(parent, ParentType.PREFIX))
+        # Stopping condition handled in getParentsAndFeatures
+        # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
