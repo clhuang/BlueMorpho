@@ -2,14 +2,16 @@ from collections import namedtuple
 import math
 import string
 from enum import Enum
+import numpy as np
 import sklearn.linear_model
 import sklearn.feature_extraction
+
+from fileio import *
 
 VECTOR_SIZE = 200
 
 ParentTransformation = namedtuple('ParentTransformation',
-                                  'parentword', 'transformtype')
-
+                                  ['parentword', 'transformtype'])
 
 class ParentType(Enum):
     STOP = 'STOP'
@@ -23,6 +25,8 @@ class ParentType(Enum):
 class MorphoFeatureGen(object):
     def __init__(self, wordvectors, vocab, alphabet=string.ascii_lowercase):
         self.wordvectors = wordvectors
+        self.vocab = vocab
+        self.alphabet = alphabet
 
     def getParentsFeatures(self, w):
         parentsAndFeatures = {}
@@ -103,7 +107,7 @@ class MorphoFeatureGen(object):
             #planning - plan - (n)ing
             if word[x] == word[x - 1]:
                 candidates.append(ParentTransformation(parent, ParentType.REPEAT))
-            if parent[-1] in self.alphabet:
+            if parent and parent[-1] in self.alphabet:
                 for l in self.alphabet:
                     if l != parent[-1]:
                         # Ignored lines 526-27 (checks if new parent is a word???)
@@ -175,3 +179,8 @@ class MorphoFeatureGen(object):
 
     def genAffixCorrelation(self):
         pass
+
+en_wordcounts = read_wordlist('data/wordlist.sample')
+en_wordvectors = load_wordvectors('data/vectors.sample', fvocab='data/wordlist.sample', binary=False)
+
+example = MorphoFeatureGen(en_wordvectors, en_wordcounts)

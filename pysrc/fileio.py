@@ -1,9 +1,9 @@
-import Word2Vec
+from gensim.models.word2vec import Word2Vec
 from collections import Counter
 
 
-def load_wordvectors(filename):
-    return Word2Vec.load_word2vec_format(filename, binary=False)
+def load_wordvectors(filename, fvocab=None, binary=False):
+    return Word2Vec.load_word2vec_format(filename, fvocab=fvocab, binary=binary)
 
 
 def read_wordlist(filename):
