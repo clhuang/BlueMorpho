@@ -120,3 +120,58 @@ class MorphoFeatureGen(object):
         # Stopping condition handled in getParentsAndFeatures
         # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
+
+    def score(self, word, parent, paretn_type):
+        return 0
+
+    # predicts top k candidates given a word
+    def predict(self, word, k=1):
+        candidates = self.genCandidates(word)
+        scores = [(p, p_type, self.score(word, p, p_type)) for p, p_type in candidates]
+        top_k = sorted(scores, key=lambda x:x[2])[:k]
+        return top_k
+        #Add some stuff for multinomial later??
+        #STOP FACTOR TODO ???
+
+    def genSeg(self, word):
+        if "-" in word:
+            segmentation = ""
+            for part in word.split('-'):
+                segmentation += "-" + self.genSeg(part)
+            return segmentation[1:]
+
+        if "\'" in word:
+            parts = word.split('\'')
+            # I combined 2 if statements, need to check if correct (need to get
+            # list suffixes
+            if len(parts) == 2 and parts[1] in suffixes:
+                #TODO update suffix freq dist
+                pass
+            segmentation = self.genSeg(parts[0])
+            for x in len(parts):
+                segmentation += "-" + part
+                return segmentation[1:]
+        candidate = predict(word)
+        if candidate[1] == "STOP":
+            return word
+        p_len = len(candidate[0])
+        if candidate[1] == ParentType.SUFFIX:
+            suffix = word[:p_len]
+            #TODO if in suffix list - change dist
+            return self.genSeg(candidate[0]) + "-" + suffix
+        elif candidate[1] == "REPEAT":
+            pass
+        elif candidate[1] == "MODIFY":
+            pass
+        elif candidate[1] == "DELETE":
+            pass
+
+
+
+
+    def genAffixesList(self):
+        pass
+
+
+    def genAffixCorrelation(self):
+        pass
