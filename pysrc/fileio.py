@@ -13,7 +13,7 @@ def read_wordlist(filename):
     d = Counter()
     with open(filename) as f:
         for line in f:
-            word, count = line.split()
+            count, word = line.split()
             d[word] = int(count)
     return d
 
@@ -28,3 +28,5 @@ def readCorpus(filename):
         tags = [g.split(':')[1] for g in lines[1:]]
         d[lines[0]] = (seg, tags)
     return d
+
+#read_wordlist('../data/wordlist-2010.eng.txt')
