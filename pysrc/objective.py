@@ -1,4 +1,5 @@
 import scipy.optimize
+import numpy.linalg
 import numpy as np
 
 
@@ -37,6 +38,8 @@ def optimize_weights(X, nzs, neighbors, lamb=0):
         for i, nbrs in enumerate(neighbors):
             fv += np.log(F[i]) - np.log(F[nbrs].sum())
             gv += G[i] / F[i] - G[nbrs].sum(0) / F[nbrs].sum()
+        fv -= lamb * numpy.linalg.norm(weights)
+        gv -= 2 * lamb * weights
         # return negative because fmin
         return -fv, -gv
 
