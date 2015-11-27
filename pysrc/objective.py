@@ -2,6 +2,8 @@ import scipy.optimize
 import numpy.linalg
 import numpy as np
 
+from globals import *
+
 
 def optimize_weights(X, nzs, neighbors, lamb=0):
     '''
