@@ -158,17 +158,21 @@ class MorphoFeatureGen(object):
         candidate = predict(word)
         if candidate[1] == "STOP":
             return word
-        p_len = len(candidate[0])
+        parent = candidate[0]
+        p_len = len(parent)
         if candidate[1] == ParentType.SUFFIX:
-            suffix = word[:p_len]
+            suffix = word[p_len:]
             #TODO if in suffix list - change dist
-            return self.genSeg(candidate[0]) + "-" + suffix
+            return self.genSeg(parent) + "-" + suffix
         elif candidate[1] == "REPEAT":
-            pass
+            return self.genSeg(parent) + word[p_len] + "-" + word[p_len + 1:]
         elif candidate[1] == "MODIFY":
-            pass
+            return self.genSeg(parent)[:-1] + word[p_len - 1] + "-" + word[p_len:]
         elif candidate[1] == "DELETE":
-            pass
+            parent_seg = self.genSeg(parent)
+            if parent_seg[-2] == '-':
+                return parent_seg[:-1] + word[p_len-1:]
+            return parent_seg[:-1] + "-" + word[p_len-1:]
 
 
 
