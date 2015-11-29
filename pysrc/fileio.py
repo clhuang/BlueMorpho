@@ -4,14 +4,14 @@ def load_wordvectors(filename, fvocab=None, binary=False):
     return Word2Vec.load_word2vec_format(filename, fvocab=fvocab, binary=binary)
 
 
-def read_wordlist(filename):
+def read_wordcounts(filename):
     """
     Returns a dict of words and their corresponding counts.
     """
     d = {}
     with open(filename) as f:
         for line in f:
-            count, word = line.split()
+            word, count = line.split()
             d[word] = int(count)
     return d
 
@@ -30,4 +30,11 @@ def readCorpus(filename):
     return d
 
 #read_wordlist('../data/wordlist-2010.eng.txt')
-readCorpus('../data/goldstd_trainset_segmentation.eng.txt')
+
+def read_words(filename):
+    """Read words into a set without counts."""
+    s = set()
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            s.add(line.strip())
+    return s
