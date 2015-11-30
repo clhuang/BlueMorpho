@@ -1,5 +1,6 @@
 from gensim.models.word2vec import Word2Vec
 
+
 def load_wordvectors(filename, fvocab=None, binary=False):
     return Word2Vec.load_word2vec_format(filename, fvocab=fvocab, binary=binary)
 
@@ -20,7 +21,7 @@ def read_wordcounts(filename):
 def readCorpus(filename):
     f = open(filename, 'r')
     d = {}  # maps word to a tuple containing segmentation and a list of tags
-    for lines in f.readlines():
+    for lines in f:
         lines = lines.split()
         lines = lines.split(',')
 #TODO deal with multiple possible segmentations for each word - along
@@ -30,6 +31,7 @@ def readCorpus(filename):
     return d
 
 #read_wordlist('../data/wordlist-2010.eng.txt')
+
 
 def read_words(filename):
     """Read words into a set without counts."""
