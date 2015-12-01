@@ -4,6 +4,11 @@
 /iterate.dat
 *.class
 
+# Large data files
+/data/en-*
+/data/tr-*
+!/data/*small*
+
 # Python compiled files
 *.pyc
 
