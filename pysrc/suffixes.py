@@ -1,7 +1,9 @@
 import fileio
-from collections import Counter
+from collections import Counter, defaultdict
 import math
 import pickle
+import numpy as np
+import numpy.linalg
 
 MIN_WORD_FREQ = 1
 MAX_AFFIX_LEN = 6
@@ -28,8 +30,14 @@ def genAffixesList(filename):
 
 
 def genAffixesListOpt(wordlist, wordvectors):
+    ZERO_VECTOR = lambda: np.zeros(wordvectors.vector_size, dtype='float')
     suffixes = Counter()
     prefixes = Counter()
+    suffixvector = defaultdict(ZERO_VECTOR)
+    suffixvectorcnt = Counter()
+    prefixvector = defaultdict(ZERO_VECTOR)
+    prefixvectorcnt = Counter()
+
     for word, count in wordlist.items():
         if count < MIN_WORD_FREQ:
             continue
@@ -39,6 +47,10 @@ def genAffixesListOpt(wordlist, wordvectors):
             if len(suffix) <= MAX_AFFIX_LEN and wordlist[prefix] >= 30 and '-' not in suffix and '\'' not in suffix[1:]:
                 if word in wordvectors and prefix in wordvectors:
                     sim = wordvectors.similarity(word, prefix)
+                    wvdiff = wordvectors[word] - wordvectors[prefix]
+                    wvdiff /= np.linalg.norm(wvdiff)
+                    suffixvector[suffix] += wvdiff
+                    suffixvectorcnt[suffix] += 1
                     suffixes[suffix] += sim * (math.log(count) + math.log(wordlist[prefix]))
                 else:
                     sim = 0.2
@@ -47,16 +59,25 @@ def genAffixesListOpt(wordlist, wordvectors):
             if len(prefix) <= MAX_AFFIX_LEN and wordlist[suffix] >= 30 and '-' not in prefix and '\'' not in prefix[1:]:
                 if word in wordvectors and suffix in wordvectors:
                     sim = wordvectors.similarity(word, suffix)
+                    wvdiff = wordvectors[word] - wordvectors[prefix]
+                    wvdiff /= np.linalg.norm(wvdiff)
+                    prefixvector[suffix] += wvdiff
+                    prefixvectorcnt[suffix] += 1
                     prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
                 else:
                     sim = 0.2
                     prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
 
-    suff_list = ([s[0] for s in suffixes.most_common(100)])
-    pref_list =  ([p[0] for p in prefixes.most_common(100)])
+    for suffix in suffixvector:
+        suffixvector[suffix] /= suffixvectorcnt[suffix]
+        suffixes[suffix] *= (1 + 0 * np.linalg.norm(suffixvector[suffix]))
+    for prefix in prefixvector:
+        prefixvector[prefix] /= prefixvectorcnt[prefix]
+        prefixes[prefix] *= (1 + 0 * np.linalg.norm(prefixvector[prefix]))
+    suff_list = [s[0] for s in suffixes.most_common(100)]
+    pref_list = [p[0] for p in prefixes.most_common(100)]
     print suff_list
     print pref_list
-
 
 def genAffixCorrelation(affixes, wordlist):
     d = {}
@@ -83,6 +104,7 @@ filename = '../data/wordlist-2010.eng.txt'
 #filename = '../data/somewords.txt'
 #genAffixesList(filename)
 wordvectors = fileio.load_wordvectors('../data/vectors_filtered/en/vectors200_filtered.txt')
+# wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
 wordlist = fileio.read_wordcounts(filename)
 #genAffixesListOpt(wordlist, wordvectors)
