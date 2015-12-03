@@ -1,4 +1,5 @@
 from gensim.models.word2vec import Word2Vec
+from collections import Counter
 
 
 def load_wordvectors(filename, fvocab=None, binary=False):
@@ -9,7 +10,7 @@ def read_wordcounts(filename):
     """
     Returns a dict of words and their corresponding counts.
     """
-    d = {}
+    d = Counter()
     with open(filename) as f:
         for line in f:
             count, word = line.split()
