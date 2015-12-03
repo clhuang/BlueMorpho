@@ -1,6 +1,7 @@
 import fileio
 from collections import Counter
 import math
+import pickle
 
 MIN_WORD_FREQ = 1
 MAX_AFFIX_LEN = 6
@@ -51,29 +52,40 @@ def genAffixesListOpt(wordlist, wordvectors):
                     sim = 0.2
                     prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
 
-    print ([s[0] for s in suffixes.most_common(100)])
-    print ([p[0] for p in prefixes.most_common(100)])
-
+    suff_list = ([s[0] for s in suffixes.most_common(100)])
+    pref_list =  ([p[0] for p in prefixes.most_common(100)])
+    print suff_list
+    print pref_list
 
 
 def genAffixCorrelation(affixes, wordlist):
     d = {}
+    d2 = {}
     for affix in affixes:
         d[affix] = set()
         affixlen = len(affix)
         for word in wordlist:
             if word[-affixlen:] == affix:
                 d[affix].add(word[:-affixlen])
+    for affix in affixes:
+        for affix2 in affixes:
+            if affix != affix2:
+                d2[(affix, affix2)] = len(d[affix] & d[affix2]) / len(d[affix])
 
 
 
 
 
 
-filename = 'data/wordlist-2010.eng.txt'
+
+
+filename = '../data/wordlist-2010.eng.txt'
 #filename = '../data/somewords.txt'
 #genAffixesList(filename)
-wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
+wordvectors = fileio.load_wordvectors('../data/vectors_filtered/en/vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
 wordlist = fileio.read_wordcounts(filename)
-genAffixesListOpt(wordlist, wordvectors)
+#genAffixesListOpt(wordlist, wordvectors)
+prefix_list = pickle.load(open("../data/prefix_list.p", "rb"))
+suffix_list = pickle.load(open("../data/suffix_list.p", "rb"))
+
