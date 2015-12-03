@@ -42,13 +42,30 @@ def genAffixesListOpt(wordlist, wordvectors):
                 else:
                     sim = 0.2
                     suffixes[suffix] += sim * (math.log(count) + math.log(wordlist[prefix]))
-    print([s[0] for s in suffixes.most_common(100)])
+
+            if len(prefix) <= MAX_AFFIX_LEN and wordlist[suffix] >= 30 and '-' not in prefix and '\'' not in prefix[1:]:
+                if word in wordvectors and suffix in wordvectors:
+                    sim = wordvectors.similarity(word, suffix)
+                    prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
+                else:
+                    sim = 0.2
+                    prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
+
+    print ([s[0] for s in suffixes.most_common(100)])
+    print ([p[0] for p in prefixes.most_common(100)])
+
 
 
 def genAffixCorrelation(affixes, wordlist):
     d = {}
     for affix in affixes:
-        d[affix] = []
+        d[affix] = set()
+        affixlen = len(affix)
+        for word in wordlist:
+            if word[-affixlen:] == affix:
+                d[affix].add(word[:-affixlen])
+
+
 
 
 
