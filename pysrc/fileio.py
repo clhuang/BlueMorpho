@@ -12,7 +12,7 @@ def read_wordcounts(filename):
     d = {}
     with open(filename) as f:
         for line in f:
-            word, count = line.split()
+            count, word = line.split()
             d[word] = int(count)
     return d
 

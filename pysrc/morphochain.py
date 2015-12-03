@@ -11,6 +11,7 @@ from globals import *
 ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype'])
 
+
 class ParentType(Enum):
     STOP = 'STOP'
     PREFIX = 'PREFIX'
@@ -19,10 +20,14 @@ class ParentType(Enum):
     DELETE = 'DELETE'
     REPEAT = 'REPEAT'
 
+
 class MorphoChain(object):
-    def __init__(self, wordvectors, vocab, alphabet=string.ascii_lowercase):
+    def __init__(self, wordvectors, vocab, dictionary, affixes,
+                 alphabet=string.ascii_lowercase):
         self.wordvectors = wordvectors
         self.vocab = vocab
+        self.dictionary = dictionary
+        self.affixes = affixes
         self.alphabet = alphabet
 
     def getParentsFeatures(self, w):
@@ -52,7 +57,7 @@ class MorphoChain(object):
         d['transformtype'] = z.transformtype
         # cosine similarity between word and parent
         d['cos'] = self.similarity(w, z.parentword)
-
+        parent = z.parentword
         lenparent = len(z.parentword)
         # affix
         if z.transformtype == ParentType.PREFIX:
@@ -62,38 +67,51 @@ class MorphoChain(object):
                 affix = "UNK"
             d['affix+type'] = "PREFIX_" + affix
             for prefix in PREFIXES:
-                # FIX: what if z.parentword does not have a vector?
-                difference = self.wordvectors[w] - self.wordvectors[z.parentword]
-                cos_sim = self.similarity(difference, self.wordvectors[prefix])
-                # FIX: this is currently storing only the last prefix into d['diff']
-                d['diff'] = prefix + "_" + cos_sim
+                if w not in self.wordvectors:
+                    break
+                if parent in self.wordvectors:
+                    # FIX: what if z.parentword does not have a vector?
+                    difference = self.wordvectors[w] - self.wordvectors[parent]
+                    cos_sim = self.similarity(difference, self.wordvectors[prefix])
+                    # FIX: this is currently storing only the last prefix into d['diff']
+                    d['diff'] = prefix + "_" + cos_sim
+            if affix in PREFIXNEIGHBOURS:
+                for n in PREFIXNEIGHBOURS[affix]:
+                    if parent + n in vocab:
+                        d['neighbours'] = "COR_S_" + affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
             elif z.transformtype == ParentType.REPEAT:
                 affix = w[lenparent + 1:]
+                d['char'] = "REPEAT_" + parent[-1]
             elif z.transformtype == ParentType.DELETE:
                 affix = w[lenparent - 1:]
+                d['char'] = "DELETE_" + parent[-1]
             elif z.transformtype == ParentType.MODIFY:
-                affix = w[len(z.parentword):]
-            # list of suffixes  #TODO: Maxlength of suffix is a param??
+                affix = w[lenparent:]
+                d['char'] = "DELETE_" + parent[-1] + "_" + w[lenparent - 1]
+            # list of suffixes
             if len(affix) > MAX_SUFF_LEN or affix not in SUFFIXES:
                 affix = "UNK"
             d['affix+type'] = "SUFFIX_" + affix
             for suffix in SUFFIXES:
-                difference = self.wordvectors[w] - self.wordvectors[z.parentword]
+                difference = self.wordvectors[w] - self.wordvectors[parent]
                 cos_sim = self.similarity(difference, self.wordvectors[suffix])
                 d['diff'] = suffix + "_" + cos_sim
-
-        # affix correlation TODO
-        # parent is not in word list
+            # affix correlation TODO check for each case
+            if affix in SUFFIXNEIGHBOURS:
+                for n in SUFFIXNEIGHBOURS[affix]:
+                    if w[:lenparent - len(affix)] + n in vocab:
+                        d['neighbours'] = "COR_S_" + affix
+         # parent is not in word list
         if z.parentword not in self.vocab:
             d['out_of_vocab'] = 1
         # if parent in word list - log frequency
         else:
             d['parent_in_word_list'] = math.log10(self.vocab[z.parentword])
         # presence in English dictionary
-        d['parent_in_dict'] = 0
+        d['parent_in_dict'] = z.parentword in self.dictionary
 
         #TODO USE dp -- extend C(w) using existing affixes and word2vec
 
@@ -116,7 +134,8 @@ class MorphoChain(object):
             # libraries - librar(y) -ies ?? (Delete)
             if len(parent) < len(word) - 1 and word[x:] in SUFFIXES:
                 for l in self.alphabet:
-                    # TODO check if parent+l is a word
+                    # TODO check if parent+l is a word (why do we only check
+                    # suffixes here???)
                     candidates.append(ParentTransformation(parent + l, ParentType.DELETE))
         for x in range(1, len(word) // 2):
             parent = word[x:]
@@ -173,15 +192,6 @@ class MorphoChain(object):
             if parent_seg[-2] == '-':
                 return parent_seg[:-1] + word[p_len-1:]
             return parent_seg[:-1] + "-" + word[p_len-1:]
-
-
-
-
-    def genAffixesList(self):
-        pass
-
-    def genAffixCorrelation(self):
-        pass
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
