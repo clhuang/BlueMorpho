@@ -91,23 +91,18 @@ def genAffixCorrelation(affixes, wordlist):
     for affix in affixes:
         for affix2 in affixes:
             if affix != affix2:
-                d2[(affix, affix2)] = len(d[affix] & d[affix2]) / len(d[affix])
-
-
-
-
-
-
+                d2[(affix, affix2)] = float(len(d[affix] & d[affix2])) / len(d[affix])
+    pickle.dump(d2, open("suffix_corr.p", "wb"))
 
 
 filename = '../data/wordlist-2010.eng.txt'
 #filename = '../data/somewords.txt'
 #genAffixesList(filename)
-wordvectors = fileio.load_wordvectors('../data/vectors_filtered/en/vectors200_filtered.txt')
+#wordvectors = fileio.load_wordvectors('../data/vectors_filtered/en/vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
 wordlist = fileio.read_wordcounts(filename)
 #genAffixesListOpt(wordlist, wordvectors)
 prefix_list = pickle.load(open("../data/prefix_list.p", "rb"))
 suffix_list = pickle.load(open("../data/suffix_list.p", "rb"))
-
+genAffixCorrelation(suffix_list, wordlist)
