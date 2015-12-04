@@ -22,7 +22,7 @@ class ParentType(Enum):
 
 
 class MorphoChain(object):
-    def __init__(self, wordvectors, vocab, dictionary, affixes,
+    def __init__(self, wordvectors, vocab, affixes, dictionary=None,
                  alphabet=string.ascii_lowercase):
         self.wordvectors = wordvectors
         self.vocab = vocab
@@ -111,7 +111,7 @@ class MorphoChain(object):
         else:
             d['parent_in_word_list'] = math.log10(self.vocab[z.parentword])
         # presence in English dictionary
-        d['parent_in_dict'] = z.parentword in self.dictionary
+        # d['parent_in_dict'] = z.parentword in self.dictionary
 
         #TODO USE dp -- extend C(w) using existing affixes and word2vec
 
@@ -137,14 +137,14 @@ class MorphoChain(object):
                     # TODO check if parent+l is a word (why do we only check
                     # suffixes here???)
                     candidates.append(ParentTransformation(parent + l, ParentType.DELETE))
-        for x in range(1, len(word) // 2):
+        for x in range(1, (len(word) + 2) // 2):
             parent = word[x:]
             candidates.append(ParentTransformation(parent, ParentType.PREFIX))
         # Stopping condition handled in getParentsAndFeatures
         # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
 
-    def score(self, word, parent, paretn_type):
+    def score(self, word, parent, parent_type):
         return 0
 
     # predicts top k candidates given a word
