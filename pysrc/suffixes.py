@@ -59,10 +59,10 @@ def genAffixesListOpt(wordlist, wordvectors):
             if len(prefix) <= MAX_AFFIX_LEN and wordlist[suffix] >= 30 and '-' not in prefix and '\'' not in prefix[1:]:
                 if word in wordvectors and suffix in wordvectors:
                     sim = wordvectors.similarity(word, suffix)
-                    wvdiff = wordvectors[word] - wordvectors[prefix]
+                    wvdiff = wordvectors[word] - wordvectors[suffix]
                     wvdiff /= np.linalg.norm(wvdiff)
-                    prefixvector[suffix] += wvdiff
-                    prefixvectorcnt[suffix] += 1
+                    prefixvector[prefix] += wvdiff
+                    prefixvectorcnt[prefix] += 1
                     prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
                 else:
                     sim = 0.2
@@ -70,14 +70,14 @@ def genAffixesListOpt(wordlist, wordvectors):
 
     for suffix in suffixvector:
         suffixvector[suffix] /= suffixvectorcnt[suffix]
-        suffixes[suffix] *= (1 + 0 * np.linalg.norm(suffixvector[suffix]))
+        suffixes[suffix] *= (1 + 0.3 * np.linalg.norm(suffixvector[suffix]))
     for prefix in prefixvector:
         prefixvector[prefix] /= prefixvectorcnt[prefix]
-        prefixes[prefix] *= (1 + 0 * np.linalg.norm(prefixvector[prefix]))
+        prefixes[prefix] *= (1 + 0.3 * np.linalg.norm(prefixvector[prefix]))
     suff_list = [s[0] for s in suffixes.most_common(100)]
     pref_list = [p[0] for p in prefixes.most_common(100)]
-    print suff_list
-    print pref_list
+    print(suff_list)
+    print(pref_list)
 
 
 def genAffixCorrelation(affixes, wordlist):
@@ -97,7 +97,13 @@ def genAffixCorrelation(affixes, wordlist):
 
 
 filename = '../data/wordlist-2010.eng.txt'
+
 wordlist = fileio.read_wordcounts(filename, True)
+
+#wordvectors = fileio.load_wordvectors('../data/vectors_filtered/en/vectors200_filtered.txt')
+# wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
+# wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
+wordlist = fileio.read_wordcounts(filename)
 #genAffixesListOpt(wordlist, wordvectors)
 #prefix_list = pickle.load(open("../data/prefix_list.p", "rb"))
 #suffix_list = pickle.load(open("../data/suffix_list.p", "rb"))
