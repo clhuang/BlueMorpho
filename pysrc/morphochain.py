@@ -149,6 +149,21 @@ class MorphoChain(object):
         # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
 
+    def genNeighbors(self, w, k=5):
+        k = min(k, (len(w)) / 2)
+        ne = set()
+        def swap(word, i):
+            return word[:max(0,i)] + word[i+1] + word[i] + word[i+2:]
+        for i in range(k):
+            ne.add(swap(w, i))
+        for i in range(len(w) - k - 1, len(w) - 1):
+            ne.add(swap(w, i))
+        for i in range(k):
+            for j in range(max(k + 2, len(w) - k - 1), len(w) - 1):
+                ne.add(swap(swap(w, i), j))
+        ne.discard(w)
+        return ne
+
     def scoreFeatures(self, featureDict):
         fv = dictvectorizer.transform(featureDict)
         return fv.dot(self.weightvector)
