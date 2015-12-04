@@ -4,7 +4,7 @@ import string
 from enum import Enum
 import numpy as np
 import sklearn.linear_model
-import sklearn.feature_extraction
+from sklearn.feature_extraction import DictVectorizer
 
 from globals import *
 
@@ -23,14 +23,19 @@ class ParentType(Enum):
 
 class MorphoChain(object):
     def __init__(self, wordvectors, vocab, affixes, dictionary=None,
-                 alphabet=string.ascii_lowercase):
+                 alphabet=string.ascii_lowercase, dictvectorizer=None,
+                 weightvector=None):
         self.wordvectors = wordvectors
         self.vocab = vocab
         self.dictionary = dictionary
         self.affixes = affixes
         self.alphabet = alphabet
+        self.dictvectorizer = dictvectorizer
 
     def getParentsFeatures(self, w):
+        """
+        Return dict from possible parents to feature dict
+        """
         parentsAndFeatures = {}
         for z in self.genCandidates(w):
             parentsAndFeatures[z] = self.getFeatures(w, z)
@@ -144,17 +149,16 @@ class MorphoChain(object):
         # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
 
-    def score(self, word, parent, parent_type):
-        return 0
+    def scoreFeatures(self, featureDict):
+        fv = dictvectorizer.transform(featureDict)
+        return fv.dot(self.weightvector)
 
     # predicts top k candidates given a word
     def predict(self, word, k=1):
-        candidates = self.genCandidates(word)
-        scores = [(p, p_type, self.score(word, p, p_type)) for p, p_type in candidates]
-        top_k = sorted(scores, key=lambda x:x[2])[:k]
-        return top_k
-        #Add some stuff for multinomial later??
-        #STOP FACTOR TODO ???
+        parentsFeatures = self.getParentsFeatures(word)
+        parentsScores = {parent: self.scoreFeatures(features)
+                         for parent, features in parentsFeatures.items()}
+        return parentsScores
 
     def genSeg(self, word):
         if "-" in word:
