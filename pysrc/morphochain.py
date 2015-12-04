@@ -95,7 +95,7 @@ class MorphoChain(object):
                 d['char'] = "DELETE_" + parent[-1]
             elif z.transformtype == ParentType.MODIFY:
                 affix = w[lenparent:]
-                d['char'] = "DELETE_" + parent[-1] + "_" + w[lenparent - 1]
+                d['char'] = "MODIFY_" + parent[-1] + "_" + w[lenparent - 1]
             # list of suffixes
             if len(affix) > MAX_SUFF_LEN or affix not in SUFFIXES:
                 affix = "UNK"
