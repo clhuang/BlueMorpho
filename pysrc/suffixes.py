@@ -100,13 +100,13 @@ filename = 'data/wordlist-2010.eng.txt'
 
 wordlist = fileio.read_wordcounts(filename, True)
 
-#wordvectors = fileio.load_wordvectors('../data/vectors_filtered/en/vectors200_filtered.txt')
+#wordvectors = fileio.load_wordvectors('data/vectors_filtered/en/vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
 wordlist = fileio.read_wordcounts(filename)
 #genAffixesListOpt(wordlist, wordvectors)
-#prefix_list = pickle.load(open("../data/prefix_list.p", "rb"))
-#suffix_list = pickle.load(open("../data/suffix_list.p", "rb"))
+#prefix_list = pickle.load(open('data/prefix_list.p', 'rb'))
+#suffix_list = pickle.load(open('data/suffix_list.p', 'rb'))
 suffixes = ['s', "'s", 'ing', 'ed', 'd', 'ly', "'", 'er', 'e', 'es', 'y', 'n', 'ers', 'ness', 'a', 'r', 'i', 'rs', 'o', 't', 'al', 'l', 'man', 'ally', 'ism', 'less', 'able', 'ist', 'en', 'ity', 'on', 'in', 'an', 'h', 'ns', 'ic', 'ment', 'ian', 'ings', 'ion', 'm', 'ie', 'g', 'ists', 'c', 'land', 'men', 'k', 'son', 'is', 'est', 'ful', 'ized', 'ville', 'ship', 'na', 'ting', 'ation', 'ish', 'le', 'ne', 'ies', 'u', 'ry', 'p', 'ia', 'as', 'line', 'ling', 'ments', 'ions', 'ier', 'b', 'like', 'f', 'or', 'ton', 'la', 'hip', 'ping', 'el', 'os', 'side', 'ted', 'us', 'x', 'ize', 'z', 'ter', 'ised', 'izing', 'st', 'ta', 'led', 'house', 'ni', 'ped', 'ee', 'to', 'way']
 prefixes = ['un', 're', 's', 'a', 'over', 'de', 'c', 'in', 'non', 'b', 'p', 't', 'dis', 'm', 'd', 'g', 'e', 'k', 'super', 'f', 'h', 'under', 'pre', 'mis', 'inter', 'out', 'i', 'n', 'r', 'w', 'mc', 'sub', 'l', 'o', 'co', 'micro', 'ma', 'la', 'bio', 'multi', 'im', 'be', 'al', 'en', 'v', 'j', 'euro', 'u', 'sa', 'air', 'tele', 'st', 'le', 'anti', 'up', 'sun', 'di', 'ca', 'to', 'mo', 'ba', 'sh', 'back', 'con', 'y', 'mid', 'ka', 'da', 'trans', 'ta', 'sea', 'se', 'bi', 'an', 'z', 'car', 'ro', 'sc', 'ha', 'pro', 'ar', 'na', 'mi', 'home', 'mar', 'fore', 'ra', 'the', 'mega', 'hand', 'pa', 'bar', 'su', 'ad', 'bo', 'mac', 'post', 'mini', 'ch', 'head']
 genAffixCorrelation(suffixes, wordlist)

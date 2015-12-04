@@ -50,4 +50,4 @@ def read_words(filename):
             s.add(line.strip())
     return s
 
-readCorpus("data/goldstd_trainset.segmentation.eng.txt", True)
+# readCorpus("data/goldstd_trainset.segmentation.eng.txt", True)

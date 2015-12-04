@@ -28,7 +28,7 @@ class MorphoChain(object):
         self.wordvectors = wordvectors
         self.vocab = vocab
         self.dictionary = dictionary
-        self.affixes = affixes
+        self.prefixes, self.suffixes = affixes
         self.alphabet = alphabet
         self.dictvectorizer = dictvectorizer
 
@@ -68,10 +68,10 @@ class MorphoChain(object):
         if z.transformtype == ParentType.PREFIX:
             affix = w[:-lenparent]
             # list of prefixes  #TODO: Maxlength of suffix is a param??
-            if len(affix) > MAX_PREF_LEN or affix not in PREFIXES:
+            if len(affix) > MAX_PREF_LEN or affix not in self.prefixes:
                 affix = "UNK"
             d['affix+type'] = "PREFIX_" + affix
-            for prefix in PREFIXES:
+            for prefix in self.prefixes:
                 if w not in self.wordvectors:
                     break
                 if parent in self.wordvectors:
@@ -97,10 +97,10 @@ class MorphoChain(object):
                 affix = w[lenparent:]
                 d['char'] = "MODIFY_" + parent[-1] + "_" + w[lenparent - 1]
             # list of suffixes
-            if len(affix) > MAX_SUFF_LEN or affix not in SUFFIXES:
+            if len(affix) > MAX_SUFF_LEN or affix not in self.suffixes:
                 affix = "UNK"
             d['affix+type'] = "SUFFIX_" + affix
-            for suffix in SUFFIXES:
+            for suffix in self.suffixes:
                 difference = self.wordvectors[w] - self.wordvectors[parent]
                 cos_sim = self.similarity(difference, self.wordvectors[suffix])
                 d['diff'] = suffix + "_" + cos_sim
@@ -133,15 +133,18 @@ class MorphoChain(object):
             if parent and parent[-1] in self.alphabet:
                 for l in self.alphabet:
                     if l != parent[-1]:
-                        # Ignored lines 526-27 (checks if new parent is a word???)
-                        # and checks similiary btwn words and parents
-                        candidates.append(ParentTransformation(parent[:-1] + l, ParentType.MODIFY))
+                        # TODO do we want word count threshhold?
+                        newParent = parent[:-1] + l
+                        SIM_THRESH = 0.2
+                        if newParent in self.vocab and self.similarity(word, newParent) > SIM_THRESH:
+                            candidates.append(ParentTransformation(newParent, ParentType.MODIFY))
             # libraries - librar(y) -ies ?? (Delete)
-            if len(parent) < len(word) - 1 and word[x:] in SUFFIXES:
+            if len(parent) < len(word) - 1 and word[x:] in self.suffixes:
                 for l in self.alphabet:
-                    # TODO check if parent+l is a word (why do we only check
-                    # suffixes here???)
-                    candidates.append(ParentTransformation(parent + l, ParentType.DELETE))
+                    newParent = parent + l
+                    SIM_THRESH = 0
+                    if newParent in self.vocab and self.similarity(word, newParent) > SIM_THRESH:
+                        candidates.append(ParentTransformation(newParent, ParentType.DELETE))
         for x in range(1, (len(word) + 2) // 2):
             parent = word[x:]
             candidates.append(ParentTransformation(parent, ParentType.PREFIX))
@@ -151,16 +154,16 @@ class MorphoChain(object):
 
     def genNeighbors(self, w, k=5):
         k = min(k, (len(w)) / 2)
-        ne = set()
+        ne = set([w])
         def swap(word, i):
-            return word[:max(0,i)] + word[i+1] + word[i] + word[i+2:]
+            return word[:i] + word[i+1] + word[i] + word[i+2:]
         for i in range(k):
             ne.add(swap(w, i))
         for i in range(len(w) - k - 1, len(w) - 1):
             ne.add(swap(w, i))
-        for i in range(k):
-            for j in range(max(k + 2, len(w) - k - 1), len(w) - 1):
-                ne.add(swap(swap(w, i), j))
+        for i in range(min(k, (len(w) / 2) - 1)):
+            # for j in range(max(k + 2, len(w) - k - 1), len(w) - 1):
+            ne.add(swap(swap(w, i), len(w) - i - 2))
         ne.discard(w)
         return ne
 
@@ -186,7 +189,7 @@ class MorphoChain(object):
             parts = word.split('\'')
             # I combined 2 if statements, need to check if correct (need to get
             # list suffixes
-            if len(parts) == 2 and parts[1] in SUFFIXES:
+            if len(parts) == 2 and parts[1] in self.suffixes:
                 #TODO update suffix freq dist
                 pass
             segmentation = self.genSeg(parts[0])
