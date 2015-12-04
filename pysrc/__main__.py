@@ -1,4 +1,4 @@
 from __init__ import *
 
 if __name__ == '__main__':
-    pass
+    pprint.pprint(en_morpho.genCandidates('squished'))
