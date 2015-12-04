@@ -96,7 +96,7 @@ def genAffixCorrelation(affixes, wordlist):
     pickle.dump(d2, open("suffix_corr2.p", "wb"))
 
 
-filename = '../data/wordlist-2010.eng.txt'
+filename = 'data/wordlist-2010.eng.txt'
 
 wordlist = fileio.read_wordcounts(filename, True)
 

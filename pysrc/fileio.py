@@ -16,7 +16,7 @@ def read_wordcounts(filename, dump = False):
             count, word = line.split()
             d[word] = int(count)
     if dump:
-        pickle.dump(d, open("../data/wordcounts.p", "wb"))
+        pickle.dump(d, open("data/wordcounts.p", "wb"))
     return d
 
 
@@ -36,10 +36,10 @@ def readCorpus(filename, dump=False):
             tags.append([g.split(':')[1] for g in segment])
         d[word] = (segs, tags)
     if dump:
-        pickle.dump(d, open("../data/corpus.p", "wb"))
+        pickle.dump(d, open("data/corpus.p", "wb"))
     return d
 
-#read_wordlist('../data/wordlist-2010.eng.txt')
+#read_wordlist('data/wordlist-2010.eng.txt')
 
 
 def read_words(filename):
@@ -50,4 +50,4 @@ def read_words(filename):
             s.add(line.strip())
     return s
 
-readCorpus("../data/goldstd_trainset.segmentation.eng.txt", True)
+readCorpus("data/goldstd_trainset.segmentation.eng.txt", True)
