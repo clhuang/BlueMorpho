@@ -3,7 +3,8 @@ from morphochain import *
 from objective import *
 import pprint
 
-en_wordcounts = read_wordcounts('data/wordlist-2010.large.txt')
+en_wordcounts = read_wordcounts('data/wordlist-2010.small.txt')
+# en_wordcounts = read_wordcounts('data/wordlist-2010.large.txt')
 en_wordvectors = load_wordvectors('data/en-wordvectors200_small.txt')
 with open('data/prefix_list.p', 'rb') as f:
     en_prefixes = pickle.load(f)
