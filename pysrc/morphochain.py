@@ -181,7 +181,6 @@ class MorphoChain(object):
         nzs = []
 
         def addword(word):
-            nonlocal curid
             parentsFeatures = self.getParentsFeatures(word)
             idxs[word] = curid[0]
             curid[0] += 1
