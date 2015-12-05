@@ -195,7 +195,7 @@ class MorphoChain(object):
                 pass
             segmentation = self.genSeg(parts[0])
             for x in len(parts):
-                segmentation += "-" + part
+                segmentation += "/" + part
                 return segmentation[1:]
         candidate = predict(word)
         if candidate[1] == "STOP":
@@ -205,16 +205,16 @@ class MorphoChain(object):
         if candidate[1] == ParentType.SUFFIX:
             suffix = word[p_len:]
             #TODO if in suffix list - change dist
-            return self.genSeg(parent) + "-" + suffix
+            return self.genSeg(parent) + "/" + suffix
         elif candidate[1] == "REPEAT":
-            return self.genSeg(parent) + word[p_len] + "-" + word[p_len + 1:]
+            return self.genSeg(parent) + word[p_len] + "/" + word[p_len + 1:]
         elif candidate[1] == "MODIFY":
-            return self.genSeg(parent)[:-1] + word[p_len - 1] + "-" + word[p_len:]
+            return self.genSeg(parent)[:-1] + word[p_len - 1] + "/" + word[p_len:]
         elif candidate[1] == "DELETE":
             parent_seg = self.genSeg(parent)
-            if parent_seg[-2] == '-':
+            if parent_seg[-2] == '/':
                 return parent_seg[:-1] + word[p_len-1:]
-            return parent_seg[:-1] + "-" + word[p_len-1:]
+            return parent_seg[:-1] + "/" + word[p_len-1:]
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
