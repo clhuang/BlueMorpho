@@ -7,7 +7,7 @@ import scipy.spatial.distance
 import sklearn.linear_model
 from sklearn.feature_extraction import DictVectorizer
 
-from globals import *
+from params import *
 
 ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype'])
@@ -71,7 +71,7 @@ class MorphoChain(object):
             # list of prefixes  #TODO: Maxlength of suffix is a param??
             if len(affix) > MAX_PREF_LEN or affix not in self.prefixes:
                 affix = "UNK"
-            d['affix+type'] = "PREFIX_" + affix
+            d['affix+type_PREFIX'] = affix
             # for prefix in self.prefixes:
                 # if w in self.wordvectors and parent in self.wordvectors:
                     # # FIX: what if z.parentword does not have a vector?
@@ -82,23 +82,23 @@ class MorphoChain(object):
             # if affix in PREFIXNEIGHBOURS:
                 # for n in PREFIXNEIGHBOURS[affix]:
                     # if parent + n in vocab:
-                        # d['neighbours'] = "COR_S_" + affix
+                        # d['neighbours_COR_S'] = affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
             elif z.transformtype == ParentType.REPEAT:
                 affix = w[lenparent + 1:]
-                d['char'] = "REPEAT_" + parent[-1]
+                d['char_REPEAT'] = parent[-1]
             elif z.transformtype == ParentType.DELETE:
                 affix = w[lenparent - 1:]
-                d['char'] = "DELETE_" + parent[-1]
+                d['char_DELETE'] = parent[-1]
             elif z.transformtype == ParentType.MODIFY:
                 affix = w[lenparent:]
-                d['char'] = "MODIFY_" + parent[-1] + "_" + w[lenparent - 1]
+                d['char_MODIFY'] = parent[-1] + "_" + w[lenparent - 1]
             # list of suffixes
             if len(affix) > MAX_SUFF_LEN or affix not in self.suffixes:
                 affix = "UNK"
-            d['affix+type'] = "SUFFIX_" + affix
+            d['affix+type_SUFFIX'] = affix
             # for suffix in self.suffixes:
                 # if w in self.wordvectors and parent in self.wordvectors:
                     # difference = self.wordvectors[w] - self.wordvectors[parent]
@@ -108,7 +108,7 @@ class MorphoChain(object):
             # if affix in SUFFIXNEIGHBOURS:
                 # for n in SUFFIXNEIGHBOURS[affix]:
                     # if w[:lenparent - len(affix)] + n in vocab:
-                        # d['neighbours'] = "COR_S_" + affix
+                        # d['neighbours_COR_S'] = affix
          # parent is not in word list
         if z.parentword not in self.vocab:
             d['out_of_vocab'] = 1
@@ -167,6 +167,36 @@ class MorphoChain(object):
             ne.add(swap(swap(w, i), len(w) - i - 2))
         ne.discard(w)
         return ne
+
+    def genTrainingData(self):
+        '''
+        Returns a tuple containing:
+            Giant feature training matrix
+            Words/neighbors appearing in order, and how many z's they have
+        '''
+
+        dicts = []
+        idxs = {}
+        widsneighbors = []
+        nzs = []
+
+        def addword(word):
+            parentsFeatures = self.getParentsFeatures(word)
+            idxs[word] = len(dicts)
+            dicts.extend(parentsFeatures.values())
+            nzs.append(len(parentsFeatures))
+
+        for word in self.vocab:
+            if word not in idxs:
+                addword(word)
+            neighbors = self.genNeighbors(word)
+            for neighbor in neighbors:
+                if neighbor not in idxs:
+                    addword(neighbor)
+            widsneighbors.append(idxs[word], [idxs[neighbor] for neighbor in neighbors])
+
+        X = self.dictvectorizer.fit_transform(dicts)
+        return X, nzs, widsneighbors
 
     def scoreFeatures(self, featureDict):
         fv = dictvectorizer.transform(featureDict)

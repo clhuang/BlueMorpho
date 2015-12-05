@@ -1,5 +1,5 @@
 from fileio import *
-from globals import *
+from params import *
 from morphochain import *
 from objective import *
 import pprint
