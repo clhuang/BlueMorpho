@@ -32,12 +32,12 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0):
         idx += nz
 
     def f(weights):
-        Xp = np.exp(X.dot(weights))  # e^{\theta*\phi(w, z)}
+        Xp = np.exp(X.dot(weights)).flatten()  # e^{\theta*\phi(w, z)}
         F = np.zeros_like(nzs)  # \sum_z e^{\theta*\phi(w[i], z)}
         G = np.zeros((len(nzs), X.shape[1]))   # \sum_z \phi(w[i], z)*e^{\theta*\phi(w[i], z)}
         for i, (a, b) in enumerate(idxs):
             F[i] = Xp[a:b].sum()
-            G[i] = (X[a:b] * Xp[a:b]).sum()
+            G[i] = Xp[a:b] * X[a:b]
         fv = 0
         gv = 0
         for widx, nbrs in widsneighbors:
@@ -48,5 +48,5 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0):
         # return negative because we want to actually maximize
         return -fv, -gv
 
-    return scipy.optimize.fmin_l_bfgs_b(f, np.zeros_like(X[0]), approx_grad=False,
+    return scipy.optimize.fmin_l_bfgs_b(f, np.zeros_like(X[0].toarray()).T, approx_grad=False,
                                       fprime=None)[0]
