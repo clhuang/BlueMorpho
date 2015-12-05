@@ -207,41 +207,45 @@ class MorphoChain(object):
     # predicts top k candidates given a word
     def predict(self, word, k=1):
         parentsFeatures = self.getParentsFeatures(word)
-        parentsScores = {parent: self.scoreFeatures(features)
-                         for parent, features in parentsFeatures.items()}
+        parentsScores = Counter({parent: self.scoreFeatures(features)
+                         for parent, features in parentsFeatures.items()})
         return parentsScores
 
     def genSeg(self, word):
+        SEG_SEP = "/"
         if "-" in word:
-            segmentation = ""
+            segmentations = []
             for part in word.split('-'):
-                segmentation += "-" + self.genSeg(part)
-            return segmentation[1:]
+                segmentations.append(self.genSeg(part))
+            return (SEG_SEP + '-' + SEG_SEP).join(segmentations)
 
         if "\'" in word:
             parts = word.split('\'')
-            segmentation = self.genSeg(parts[0])
-            for part in parts:
-                segmentation += "/" + part
-            return segmentation[1:]
-        candidate = self.predict(word)
-        if candidate[1] == "STOP":
+            # really shoul
+
+            segmentation = self.genSeg(parts[0]) + SEG_SEP
+            for part in parts[1:]:
+                segmentation += GEN_SEG + '\'' + part
+            return segmentation
+
+        candidate = self.predict(word).most_common()[0][0]
+        if candidate[1] == ParentType.STOP:
             return word
         parent = candidate[0]
         p_len = len(parent)
         if candidate[1] == ParentType.SUFFIX:
             suffix = word[p_len:]
             #TODO if in suffix list - change dist
-            return self.genSeg(parent) + "/" + suffix
-        elif candidate[1] == "REPEAT":
-            return self.genSeg(parent) + word[p_len] + "/" + word[p_len + 1:]
-        elif candidate[1] == "MODIFY":
-            return self.genSeg(parent)[:-1] + word[p_len - 1] + "/" + word[p_len:]
-        elif candidate[1] == "DELETE":
+            return self.genSeg(parent) + SEG_SEP+ suffix
+        elif candidate[1] == ParentType.REPEAT:
+            return self.genSeg(parent) + word[p_len] + SEG_SEP + word[p_len + 1:]
+        elif candidate[1] == ParentType.MODIFY:
+            return self.genSeg(parent)[:-1] + word[p_len - 1] + SEG_SEP + word[p_len:]
+        elif candidate[1] == ParentType.DELETE:
             parent_seg = self.genSeg(parent)
-            if parent_seg[-2] == '/':
+            if parent_seg[-2] == SEG_SEP:
                 return parent_seg[:-1] + word[p_len-1:]
-            return parent_seg[:-1] + "/" + word[p_len-1:]
+            return parent_seg[:-1] + SEG_SEP + word[p_len-1:]
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
