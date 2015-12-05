@@ -42,7 +42,7 @@ class MorphoChain(object):
             parentsAndFeatures[z] = self.getFeatures(w, z)
         z = ParentTransformation(w, ParentType.STOP)
         parentsAndFeatures[z] = self.getFeatures(
-            w, z, max((d['cos'] for d in parentsAndFeatures.values()), default=0))
+            w, z, max([d['cos'] for d in parentsAndFeatures.values()] or [0]))
         return parentsAndFeatures
 
     def getFeatures(self, w, z, maxCosSimilarity=None):
@@ -174,7 +174,7 @@ class MorphoChain(object):
             Giant feature training matrix
             Words/neighbors appearing in order, and how many z's they have
         '''
-        curid = 0
+        curid = [0] ## ghetto hack because python 2 doesn't have nonlocal
         dicts = []
         idxs = {}
         widsneighbors = []
@@ -183,8 +183,8 @@ class MorphoChain(object):
         def addword(word):
             nonlocal curid
             parentsFeatures = self.getParentsFeatures(word)
-            idxs[word] = curid
-            curid += 1
+            idxs[word] = curid[0]
+            curid[0] += 1
             dicts.extend(parentsFeatures.values())
             nzs.append(len(parentsFeatures))
 
