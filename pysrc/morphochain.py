@@ -164,7 +164,6 @@ class MorphoChain(object):
         for i in range(min(k, (len(w) // 2) - 1)):
             # for j in range(max(k + 2, len(w) - k - 1), len(w) - 1):
             ne.add(swap(swap(w, i), len(w) - i - 2))
-        ne.discard(w)
         return ne
 
     def genTrainingData(self):

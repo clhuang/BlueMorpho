@@ -9,5 +9,5 @@ if __name__ == '__main__':
         # word = input("Input word: ")
         # pprint.pprint(en_morpho.getParentsFeatures(word))
     train = en_morpho.genTrainingData()
-    pprint.pprint(train)
+    # pprint.pprint(train)
     # optimize_weights(*train)
