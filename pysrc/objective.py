@@ -48,5 +48,5 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0):
         # return negative because we want to actually maximize
         return -fv, -gv
 
-    return scipy.optimize.fmin_l_bfgs(f, np.zeros_like(X[0]), approx_grad=False,
+    return scipy.optimize.fmin_l_bfgs_b(f, np.zeros_like(X[0]), approx_grad=False,
                                       fprime=None)[0]

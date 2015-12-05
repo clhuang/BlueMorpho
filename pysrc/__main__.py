@@ -1,12 +1,13 @@
 from __init__ import *
-import time
+import rlcompleter
+import readline
+
+readline.parse_and_bind('tab: complete')
 
 if __name__ == '__main__':
     # while True:
         # word = input("Input word: ")
         # pprint.pprint(en_morpho.getParentsFeatures(word))
-
-    print("start training data gen")
-    s = time.time()
-    en_morpho.genTrainingData()
-    print("time elapsed: " + str(time.time() - s))
+    train = en_morpho.genTrainingData()
+    pprint.pprint(train)
+    # optimize_weights(*train)
