@@ -3,6 +3,7 @@ import math
 import string
 from enum import Enum
 import numpy as np
+import scipy.spatial.distance
 import sklearn.linear_model
 from sklearn.feature_extraction import DictVectorizer
 
@@ -40,8 +41,8 @@ class MorphoChain(object):
         for z in self.genCandidates(w):
             parentsAndFeatures[z] = self.getFeatures(w, z)
         z = ParentTransformation(w, ParentType.STOP)
-        parentsAndFeatures[z] = getFeatures(
-            w, z, max(d['cos'] for d in parentsAndFeatures.items()))
+        parentsAndFeatures[z] = self.getFeatures(
+            w, z, max(d['cos'] for d in parentsAndFeatures.values()))
         return parentsAndFeatures
 
     def getFeatures(self, w, z, maxCosSimilarity=None):
@@ -71,19 +72,17 @@ class MorphoChain(object):
             if len(affix) > MAX_PREF_LEN or affix not in self.prefixes:
                 affix = "UNK"
             d['affix+type'] = "PREFIX_" + affix
-            for prefix in self.prefixes:
-                if w not in self.wordvectors:
-                    break
-                if parent in self.wordvectors:
-                    # FIX: what if z.parentword does not have a vector?
-                    difference = self.wordvectors[w] - self.wordvectors[parent]
-                    cos_sim = self.similarity(difference, self.wordvectors[prefix])
-                    # FIX: this is currently storing only the last prefix into d['diff']
-                    d['diff'] = prefix + "_" + cos_sim
-            if affix in PREFIXNEIGHBOURS:
-                for n in PREFIXNEIGHBOURS[affix]:
-                    if parent + n in vocab:
-                        d['neighbours'] = "COR_S_" + affix
+            # for prefix in self.prefixes:
+                # if w in self.wordvectors and parent in self.wordvectors:
+                    # # FIX: what if z.parentword does not have a vector?
+                    # difference = self.wordvectors[w] - self.wordvectors[parent]
+                    # cos_sim = scipy.spatial.distance.cosine(difference, self.prefixvectors[prefix])
+                    # # FIX: this is currently storing only the last prefix into d['diff']
+                    # d['diffpre_' + prefix] = cos_sim
+            # if affix in PREFIXNEIGHBOURS:
+                # for n in PREFIXNEIGHBOURS[affix]:
+                    # if parent + n in vocab:
+                        # d['neighbours'] = "COR_S_" + affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
@@ -100,15 +99,16 @@ class MorphoChain(object):
             if len(affix) > MAX_SUFF_LEN or affix not in self.suffixes:
                 affix = "UNK"
             d['affix+type'] = "SUFFIX_" + affix
-            for suffix in self.suffixes:
-                difference = self.wordvectors[w] - self.wordvectors[parent]
-                cos_sim = self.similarity(difference, self.wordvectors[suffix])
-                d['diff'] = suffix + "_" + cos_sim
-            # affix correlation TODO check for each case
-            if affix in SUFFIXNEIGHBOURS:
-                for n in SUFFIXNEIGHBOURS[affix]:
-                    if w[:lenparent - len(affix)] + n in vocab:
-                        d['neighbours'] = "COR_S_" + affix
+            # for suffix in self.suffixes:
+                # if w in self.wordvectors and parent in self.wordvectors:
+                    # difference = self.wordvectors[w] - self.wordvectors[parent]
+                    # cos_sim = scipy.spatial.distance.cosine(difference, self.suffixvectors[suffix])
+                    # d['diffsuff_' + suffix ] = cos_sim
+            # # affix correlation TODO check for each case
+            # if affix in SUFFIXNEIGHBOURS:
+                # for n in SUFFIXNEIGHBOURS[affix]:
+                    # if w[:lenparent - len(affix)] + n in vocab:
+                        # d['neighbours'] = "COR_S_" + affix
          # parent is not in word list
         if z.parentword not in self.vocab:
             d['out_of_vocab'] = 1
@@ -119,6 +119,7 @@ class MorphoChain(object):
         # d['parent_in_dict'] = z.parentword in self.dictionary
 
         #TODO USE dp -- extend C(w) using existing affixes and word2vec
+        return d
 
     #TODO add prunning heuristic
     def genCandidates(self, word):
@@ -218,5 +219,5 @@ class MorphoChain(object):
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
             # is this what we want to return? or just 0?
-            return None
+            return 0.0
         return self.wordvectors.similarity(w1, w2)
