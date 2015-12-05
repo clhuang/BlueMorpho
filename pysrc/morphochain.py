@@ -23,7 +23,7 @@ class ParentType():
 
 
 class MorphoChain(object):
-    def __init__(self, wordvectors, vocab, affixes, dictionary=None,
+    def __init__(self, wordvectors, vocab, affixes, affixNeighbours, dictionary=None,
                  alphabet=string.ascii_lowercase, dictvectorizer=None,
                  weightvector=None):
         self.wordvectors = wordvectors
@@ -32,6 +32,7 @@ class MorphoChain(object):
         self.prefixes, self.suffixes = affixes
         self.alphabet = alphabet
         self.dictvectorizer = dictvectorizer or DictVectorizer()
+        self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
 
     def getParentsFeatures(self, w):
         """
@@ -79,10 +80,10 @@ class MorphoChain(object):
                     # cos_sim = scipy.spatial.distance.cosine(difference, self.prefixvectors[prefix])
                     # # FIX: this is currently storing only the last prefix into d['diff']
                     # d['diffpre_' + prefix] = cos_sim
-            # if affix in PREFIXNEIGHBOURS:
-                # for n in PREFIXNEIGHBOURS[affix]:
-                    # if parent + n in vocab:
-                        # d['neighbours_COR_S'] = affix
+            if affix in self.prefixNeighbours:
+                for n in self.prefixNeighbours[affix]:
+                    if parent + n in vocab:
+                        d['neighbours_COR_S'] = affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
@@ -105,10 +106,10 @@ class MorphoChain(object):
                     # cos_sim = scipy.spatial.distance.cosine(difference, self.suffixvectors[suffix])
                     # d['diffsuff_' + suffix ] = cos_sim
             # # affix correlation TODO check for each case
-            # if affix in SUFFIXNEIGHBOURS:
-                # for n in SUFFIXNEIGHBOURS[affix]:
-                    # if w[:lenparent - len(affix)] + n in vocab:
-                        # d['neighbours_COR_S'] = affix
+            if affix in self.suffixNeighbours:
+                for n in self.suffixNeighbours[affix]:
+                    if w[:lenparent - len(affix)] + n in vocab:
+                        d['neighbours_COR_S'] = affix
          # parent is not in word list
         if z.parentword not in self.vocab:
             d['out_of_vocab'] = 1
@@ -219,16 +220,11 @@ class MorphoChain(object):
 
         if "\'" in word:
             parts = word.split('\'')
-            # I combined 2 if statements, need to check if correct (need to get
-            # list suffixes
-            if len(parts) == 2 and parts[1] in self.suffixes:
-                #TODO update suffix freq dist
-                pass
             segmentation = self.genSeg(parts[0])
-            for x in len(parts):
+            for part in parts:
                 segmentation += "/" + part
-                return segmentation[1:]
-        candidate = predict(word)
+            return segmentation[1:]
+        candidate = self.predict(word)
         if candidate[1] == "STOP":
             return word
         parent = candidate[0]
