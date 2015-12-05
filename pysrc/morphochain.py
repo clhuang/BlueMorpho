@@ -7,8 +7,6 @@ import scipy.spatial.distance
 import sklearn.linear_model
 from sklearn.feature_extraction import DictVectorizer
 
-from params import *
-
 ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype'])
 
@@ -221,8 +219,6 @@ class MorphoChain(object):
 
         if "\'" in word:
             parts = word.split('\'')
-            # really shoul
-
             segmentation = self.genSeg(parts[0]) + SEG_SEP
             for part in parts[1:]:
                 segmentation += GEN_SEG + '\'' + part
