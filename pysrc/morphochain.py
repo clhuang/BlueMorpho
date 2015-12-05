@@ -18,6 +18,7 @@ class ParentType():
     MODIFY = 'MODIFY'
     DELETE = 'DELETE'
     REPEAT = 'REPEAT'
+    TOPNEIGHBOURS = 7
 
 
 class MorphoChain(object):
@@ -79,7 +80,7 @@ class MorphoChain(object):
                     # # FIX: this is currently storing only the last prefix into d['diff']
                     # d['diffpre_' + prefix] = cos_sim
             if affix in self.prefixNeighbours:
-                for n in self.prefixNeighbours[affix]:
+                for n, score in self.prefixNeighbours[affix][:TOPNEIGHBOURS]:
                     if parent + n in vocab:
                         d['neighbours_COR_S'] = affix
         else:  # some sort of suffix
@@ -105,7 +106,7 @@ class MorphoChain(object):
                     # d['diffsuff_' + suffix ] = cos_sim
             # # affix correlation TODO check for each case
             if affix in self.suffixNeighbours:
-                for n in self.suffixNeighbours[affix]:
+                for n, score in self.suffixNeighbours[affix][:TOPNEIGHBOURS]:
                     if w[:lenparent - len(affix)] + n in vocab:
                         d['neighbours_COR_S'] = affix
          # parent is not in word list
