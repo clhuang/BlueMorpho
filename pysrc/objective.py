@@ -32,7 +32,7 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0):
         idx += nz
 
     def f(weights):
-        Xp = np.exp(weights.dot(X.T))  # e^{\theta*\phi(w, z)}
+        Xp = np.exp(X.dot(weights))  # e^{\theta*\phi(w, z)}
         F = np.zeros_like(nzs)  # \sum_z e^{\theta*\phi(w[i], z)}
         G = np.zeros((len(nzs), X.shape[1]))   # \sum_z \phi(w[i], z)*e^{\theta*\phi(w[i], z)}
         for i, (a, b) in enumerate(idxs):

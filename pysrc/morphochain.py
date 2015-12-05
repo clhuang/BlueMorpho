@@ -13,7 +13,7 @@ ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype'])
 
 
-class ParentType(Enum):
+class ParentType():
     STOP = 'STOP'
     PREFIX = 'PREFIX'
     SUFFIX = 'SUFFIX'
@@ -31,7 +31,7 @@ class MorphoChain(object):
         self.dictionary = dictionary
         self.prefixes, self.suffixes = affixes
         self.alphabet = alphabet
-        self.dictvectorizer = dictvectorizer
+        self.dictvectorizer = dictvectorizer or DictVectorizer()
 
     def getParentsFeatures(self, w):
         """
@@ -42,7 +42,7 @@ class MorphoChain(object):
             parentsAndFeatures[z] = self.getFeatures(w, z)
         z = ParentTransformation(w, ParentType.STOP)
         parentsAndFeatures[z] = self.getFeatures(
-            w, z, max(d['cos'] for d in parentsAndFeatures.values()))
+            w, z, max((d['cos'] for d in parentsAndFeatures.values()), default=0))
         return parentsAndFeatures
 
     def getFeatures(self, w, z, maxCosSimilarity=None):
@@ -54,12 +54,12 @@ class MorphoChain(object):
         d = {'BIAS': 1}
         if len(w) == len(z.parentword):
             if len(w) > 2:
-                d['STP_E_'] = w[:-2]
+                d['STP_E_'] = w[-2:]
                 d['STP_B_'] = w[:2]
             d['STP_COS_' + str(int(10 * maxCosSimilarity))] = 1
             d['STP_LEN_' + str(len(w))] = 1
             return d
-        d['parentword'] = z.parentword  # Too large?
+        # d['parentword'] = z.parentword  # Too large?
         d['transformtype'] = z.transformtype
         # cosine similarity between word and parent
         d['cos'] = self.similarity(w, z.parentword)
@@ -154,7 +154,7 @@ class MorphoChain(object):
         return candidates
 
     def genNeighbors(self, w, k=5):
-        k = min(k, (len(w)) / 2)
+        k = min(k, (len(w)) // 2)
         ne = set([w])
         def swap(word, i):
             return word[:i] + word[i+1] + word[i] + word[i+2:]
@@ -162,7 +162,7 @@ class MorphoChain(object):
             ne.add(swap(w, i))
         for i in range(len(w) - k - 1, len(w) - 1):
             ne.add(swap(w, i))
-        for i in range(min(k, (len(w) / 2) - 1)):
+        for i in range(min(k, (len(w) // 2) - 1)):
             # for j in range(max(k + 2, len(w) - k - 1), len(w) - 1):
             ne.add(swap(swap(w, i), len(w) - i - 2))
         ne.discard(w)
@@ -174,15 +174,17 @@ class MorphoChain(object):
             Giant feature training matrix
             Words/neighbors appearing in order, and how many z's they have
         '''
-
+        curid = 0
         dicts = []
         idxs = {}
         widsneighbors = []
         nzs = []
 
         def addword(word):
+            nonlocal curid
             parentsFeatures = self.getParentsFeatures(word)
-            idxs[word] = len(dicts)
+            idxs[word] = curid
+            curid += 1
             dicts.extend(parentsFeatures.values())
             nzs.append(len(parentsFeatures))
 
@@ -193,7 +195,7 @@ class MorphoChain(object):
             for neighbor in neighbors:
                 if neighbor not in idxs:
                     addword(neighbor)
-            widsneighbors.append(idxs[word], [idxs[neighbor] for neighbor in neighbors])
+            widsneighbors.append((idxs[word], [idxs[neighbor] for neighbor in neighbors]))
 
         X = self.dictvectorizer.fit_transform(dicts)
         return X, nzs, widsneighbors
