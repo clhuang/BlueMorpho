@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, Counter
 import math
 import string
 from enum import Enum
@@ -32,6 +32,9 @@ class MorphoChain(object):
         self.alphabet = alphabet
         self.dictvectorizer = dictvectorizer or DictVectorizer()
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
+
+    def setWeightVector(self, weightvector):
+        self.weightvector = weightvector
 
     def getParentsFeatures(self, w):
         """
@@ -199,8 +202,8 @@ class MorphoChain(object):
         return X, nzs, widsneighbors
 
     def scoreFeatures(self, featureDict):
-        fv = dictvectorizer.transform(featureDict)
-        return fv.dot(self.weightvector)
+        fv = self.dictvectorizer.transform(featureDict)
+        return np.asscalar(fv.dot(self.weightvector))
 
     # predicts top k candidates given a word
     def predict(self, word, k=1):
@@ -232,7 +235,7 @@ class MorphoChain(object):
         if candidate[1] == ParentType.SUFFIX:
             suffix = word[p_len:]
             #TODO if in suffix list - change dist
-            return self.genSeg(parent) + SEG_SEP+ suffix
+            return self.genSeg(parent) + SEG_SEP + suffix
         elif candidate[1] == ParentType.REPEAT:
             return self.genSeg(parent) + word[p_len] + SEG_SEP + word[p_len + 1:]
         elif candidate[1] == ParentType.MODIFY:
@@ -242,6 +245,10 @@ class MorphoChain(object):
             if parent_seg[-2] == SEG_SEP:
                 return parent_seg[:-1] + word[p_len-1:]
             return parent_seg[:-1] + SEG_SEP + word[p_len-1:]
+        elif candidate[1] == ParentType.PREFIX:
+            return word[:-p_len] + SEG_SEP + self.genSeg(parent)
+        else:
+            raise
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:

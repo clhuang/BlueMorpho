@@ -1,9 +1,10 @@
 import scipy.optimize
 import numpy.linalg
 import numpy as np
+import pickle
 
 
-def optimize_weights(X, nzs, widsneighbors, lamb=0):
+def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
     '''
     X is a feature matrix, where each row corresponds
     to a (w, z) pair, where the w's appear in order.
@@ -45,12 +46,16 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0):
             gv += G[widx] / F[widx] - G[nbrs].sum(0) / F[nbrs].sum()
         fv -= lamb * numpy.linalg.norm(weights)**2
         gv -= 2 * lamb * weights
-        # return negative because we want to actually maximize
         iteration[0] += 1
-        print('Iteration %s' % iteration[0])
-        print('Weights range: %s %s' % (weights.min(), weights.max()))
-        print('Fucntion: %s' % fv)
-        print('Gradient range: %s %s' % (gv.min(), gv.max()))
+        if output:
+            with open('out_py/weights.p', 'wb') as f:
+                pickle.dump(weights, f)
+            print('Call %s' % iteration[0])
+            print('\tWeights range: %s %s' % (weights.min(), weights.max()))
+            print('\tWeights norm (d=%s): %s' % (weights.size, np.linalg.norm(weights)))
+            print('\tFucntion: %s' % fv)
+            print('\tGradient range: %s %s' % (gv.min(), gv.max()))
+        # return negative because we want to actually maximize
         return -fv, -gv
 
     BOUNDS = 50
