@@ -206,11 +206,11 @@ class MorphoChain(object):
         return np.asscalar(fv.dot(self.weightvector))
 
     # predicts top k candidates given a word
-    def predict(self, word, k=1):
+    def predict(self, word, k=None):
         parentsFeatures = self.getParentsFeatures(word)
         parentsScores = Counter({parent: self.scoreFeatures(features)
                          for parent, features in parentsFeatures.items()})
-        return parentsScores
+        return parentsScores.most_common(k)
 
     def genSeg(self, word):
         SEG_SEP = "/"
@@ -224,10 +224,10 @@ class MorphoChain(object):
             parts = word.split('\'')
             segmentation = self.genSeg(parts[0]) + SEG_SEP
             for part in parts[1:]:
-                segmentation += GEN_SEG + '\'' + part
+                segmentation += SEG_SEP + '\'' + part
             return segmentation
 
-        candidate = self.predict(word).most_common()[0][0]
+        candidate = self.predict(word)[0][0]
         if candidate[1] == ParentType.STOP:
             return word
         parent = candidate[0]
@@ -255,3 +255,37 @@ class MorphoChain(object):
             # is this what we want to return? or just 0?
             return 0.0
         return self.wordvectors.similarity(w1, w2)
+
+    def computeAccuracy(self, segmentations, k=1, parents=True):
+        """
+        segmentations: as computed by readCorpus.
+        k: look at k highest parents
+        """
+        SEG_SEP = '/' # change if SEG_SEP changes above
+        num = 0
+        correct_segs = 0
+        correct_parent = 0
+        for word in segmentations:
+            gold_segs, gold_tags = segmentations[word]
+            num += 1
+            seg = self.genSeg(word).split(SEG_SEP)
+            if seg in gold_segs:
+                correct_segs += 1
+            if parents:
+                parents = self.predict(word, k)
+                found = False
+                for parent in parents:
+                    parent = parent[0].parentword
+                    for g_seg in gold_segs:
+                        for a in range(len(g_seg)):
+                            for b in range(a + 1, len(g_seg) + 1):
+                                w = ''.join(g_seg[a:b])
+                                if parent == w:
+                                    found  = True
+                if found:
+                    correct_parent += 1
+        print('%s correct segmentations of out %s' % (correct_segs, num))
+        if parents:
+            print('%s valid parents of out %s' % (correct_parent, num))
+            return float(correct_segs) / num, float(correct_parent) / num
+        return float(correct_segs) / num
