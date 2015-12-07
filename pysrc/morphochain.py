@@ -7,6 +7,8 @@ import scipy.spatial.distance
 import sklearn.linear_model
 from sklearn.feature_extraction import DictVectorizer
 
+import accuracy
+
 ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype'])
 
@@ -256,7 +258,11 @@ class MorphoChain(object):
             return 0.0
         return self.wordvectors.similarity(w1, w2)
 
-    def computeAccuracy(self, segmentations, k=1, parents=True):
+    def computeAccuracy(self, segmentations=accuracy.gold):
+        predictions = zip(wordlist, map(self.genSeg, wordlist))
+        return accuracy.score(segmentations, predictions)
+
+    def computeParentValidity(self, segmentations=accuracy.gold, k=1):
         """
         segmentations: as computed by readCorpus.
         k: look at k highest parents
@@ -271,19 +277,22 @@ class MorphoChain(object):
             seg = self.genSeg(word).split(SEG_SEP)
             if seg in gold_segs:
                 correct_segs += 1
-            if parents:
-                parents = self.predict(word, k)
-                found = False
-                for parent in parents:
-                    parent = parent[0].parentword
+            parents = self.predict(word, k)
+            found = False
+            for parent in parents:
+                parent = parent[0].parentword
+                if parent == word:
+                    if [word] in gold_segs:
+                        found = True
+                else:
                     for g_seg in gold_segs:
                         for a in range(len(g_seg)):
                             for b in range(a + 1, len(g_seg) + 1):
                                 w = ''.join(g_seg[a:b])
                                 if parent == w:
                                     found  = True
-                if found:
-                    correct_parent += 1
+            if found:
+                correct_parent += 1
         print('%s correct segmentations of out %s' % (correct_segs, num))
         if parents:
             print('%s valid parents of out %s' % (correct_parent, num))

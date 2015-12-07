@@ -23,12 +23,12 @@ if __name__ == '__main__':
                 weights = pickle.load(f)
                 en_morpho.setWeightVector(weights)
         loadweights()
-        word = input("Enter word: ")
+        word = raw_input("Enter word: ")
         while True:
             if word == 'RELOAD':
                 loadweights()
             elif word == 'EXIT':
                 break
-            pprint.pprint(en_morpho.predict(word).most_common())
+            pprint.pprint(en_morpho.predict(word))
             print(en_morpho.genSeg(word))
             word = input("Enter word: ")
