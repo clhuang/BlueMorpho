@@ -2,6 +2,7 @@ from __init__ import *
 import rlcompleter
 import readline
 import sys
+import os.path
 
 try:
     import cPickle as pickle
@@ -42,9 +43,15 @@ if __name__ == '__main__':
         file_v = 'data/en-wordvectors200_med.txt'
     if 'fullv' in sys.argv:
         v_size = 'full'
-        file_v = 'data/en-wordvectors200_filtered.bin'
-    en_wordvectors = load_wordvectors(file_v, binary=file_v.endswith('bin'))
 
+    binfile_v = file_v[:-3] + 'bin'
+    if os.path.isfile(binfile_v):
+        en_wordvectors = load_wordvectors(binfile_v, binary=True)
+    else:
+        en_wordvectors = load_wordvectors(file_v)
+
+    en_args = (en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
+    en_kwargs = {'segmentations': en_segmentations}
     if sys.version_info >= (3, 0):
         raw_input = input  # ghettooooooooo
 
@@ -81,6 +88,7 @@ if __name__ == '__main__':
             with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'rb') as f:
                 en_kwargs['weights'] = pickle.load(f)
             en_morpho = MorphoChain(*en_args, **en_kwargs)
+        en_morpho.computeAccuracy()
 
     if 'run' in sys.argv:
         word = raw_input("Enter word: ")
