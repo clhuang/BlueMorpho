@@ -45,13 +45,16 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
             F[i] = Xp[a:b].sum()
 
         data = Gcoo.data * Xp[orow]
-        G = scipy.sparse.coo_matrix((data, (nrow, Gcoo.col)), (len(idxs), nfeatures)).todense()
+        G = np.zeros((len(idxs), nfeatures), dtype=Gcoo.dtype)
+        scipy.sparse._sparsetools.coo_todense(len(idxs), nfeatures, len(nrow),
+                                              nrow, Gcoo.col, data, G.ravel('A'), 0)
 
         fv = 0
         gv = 0
         for widx, nbrs in widsneighbors:
-            fv += np.log(F[widx]) - np.log(F[nbrs].sum())
-            gv += G[widx] / F[widx] - G[nbrs].sum(0) / F[nbrs].sum()
+            fnbrssum = F[nbrs].sum()
+            fv += np.log(F[widx]) - np.log(fnbrssum)
+            gv += G[widx] / F[widx] - G[nbrs].sum(0) / fnbrssum
         fv -= lamb * numpy.linalg.norm(weights)**2
         gv -= 2 * lamb * weights
         iteration[0] += 1
@@ -61,7 +64,7 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
             print('Call %s' % iteration[0])
             print('\tWeights range: %s %s' % (weights.min(), weights.max()))
             print('\tWeights norm (d=%s): %s' % (weights.size, np.linalg.norm(weights)))
-            print('\tFucntion: %s' % fv)
+            print('\tFunction: %s' % fv)
             print('\tGradient range: %s %s' % (gv.min(), gv.max()))
         # return negative because we want to actually maximize
         return -fv, -gv
