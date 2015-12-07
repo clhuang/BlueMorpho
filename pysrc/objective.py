@@ -36,6 +36,7 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
     orow = Gcoo.row
     nrow = np.digitize(orow, np.array(idxs)[:, 1])
     nfeatures = X.shape[1]
+    nnrow = np.zeros_like(nrow)
 
     def f(weights):
         F = np.zeros_like(nzs, dtype='float')  # \sum_z e^{\theta*\phi(w[i], z)}
@@ -44,17 +45,19 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
         for i, (a, b) in enumerate(idxs):
             F[i] = Xp[a:b].sum()
 
-        data = Gcoo.data * Xp[orow]
-        G = np.zeros((len(idxs), nfeatures), dtype=Gcoo.dtype)
-        scipy.sparse._sparsetools.coo_todense(len(idxs), nfeatures, len(nrow),
-                                              nrow, Gcoo.col, data, G.ravel('A'), 0)
-
         fv = 0
-        gv = 0
+        fn = np.zeros_like(F)
         for widx, nbrs in widsneighbors:
             fnbrssum = F[nbrs].sum()
             fv += np.log(F[widx]) - np.log(fnbrssum)
-            gv += G[widx] / F[widx] - G[nbrs].sum(0) / fnbrssum
+            fn[widx] += 1 / F[widx]
+            fn[nbrs] -= 1 / fnbrssum
+
+        data = Gcoo.data * Xp[orow] * fn[nrow]
+        gv = np.zeros((nfeatures,), dtype=Gcoo.dtype)
+        scipy.sparse._sparsetools.coo_todense(1, nfeatures, len(nrow),
+                                              nnrow, Gcoo.col, data, gv, 0)
+
         fv -= lamb * numpy.linalg.norm(weights)**2
         gv -= 2 * lamb * weights
         iteration[0] += 1
