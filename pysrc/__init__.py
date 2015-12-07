@@ -18,3 +18,5 @@ en_affixes = (en_prefixes, en_suffixes)
 en_affix_corr = (en_prefixes_corr, en_suffixes_corr)
 
 en_morpho = MorphoChain(en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
+
+en_segmentations = readCorpus('data/goldstd_trainset.segmentation.eng.txt')

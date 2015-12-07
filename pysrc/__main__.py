@@ -21,5 +21,5 @@ if __name__ == '__main__':
         with open('out_py/weights.p', 'rb') as f:
             weights = pickle.load(f)
         en_morpho.setWeightVector(weights)
-        pprint.pprint(en_morpho.predict('adherement').most_common())
-        print(en_morpho.genSeg('adherement'))
+        pprint.pprint(en_morpho.predict('enlistment'))
+        print(en_morpho.genSeg('enlistment'))
