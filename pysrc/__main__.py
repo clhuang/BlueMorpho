@@ -43,6 +43,7 @@ if __name__ == '__main__':
         file_v = 'data/en-wordvectors200_med.txt'
     if 'fullv' in sys.argv:
         v_size = 'full'
+        file_v = 'data/en-wordvectors200_filtered.txt'
 
     binfile_v = file_v[:-3] + 'bin'
     if os.path.isfile(binfile_v):
