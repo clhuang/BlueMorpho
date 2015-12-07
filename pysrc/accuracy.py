@@ -37,4 +37,5 @@ def score(gold_segs_list, predictions_segs_list):
     return precision, recall
 
 
-gold = pickle.load(open('data/corpus.p'))
+with open('data/corpus.p', 'rb') as f:
+    gold = pickle.load(f)
