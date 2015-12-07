@@ -14,9 +14,11 @@ if __name__ == '__main__':
 
     if 'optimize' in sys.argv:
         en_morpho = MorphoChain(en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
+        print('generating training data')
         train = en_morpho.genTrainingData()
         with open('out_py/dictvectorizer.p', 'wb') as f:
-            pickle.dump(f, en_morpho.dictvectorizer)
+            pickle.dump(en_morpho.dictvectorizer, f)
+        print('training data saved, optimizing weights')
         weights = optimize_weights(*train)
         en_morpho.setWeightVector(weights)
 
