@@ -278,6 +278,7 @@ class MorphoChain(object):
         num = 0
         correct_segs = 0
         correct_parent = 0
+        optimal_parent = 0
         for word in segmentations:
             gold_segs, gold_tags = segmentations[word]
             num += 1
@@ -286,11 +287,13 @@ class MorphoChain(object):
                 correct_segs += 1
             parents = self.predict(word, k)
             found = False
+            found_optimal = False
             for parent in parents:
                 parent = parent[0].parentword
                 if parent == word:
                     if [word] in gold_segs:
                         found = True
+                        found_optimal = True
                 else:
                     for g_seg in gold_segs:
                         for a in range(len(g_seg)):
@@ -298,10 +301,13 @@ class MorphoChain(object):
                                 w = ''.join(g_seg[a:b])
                                 if parent == w:
                                     found  = True
+                        if parent == ''.join(g_seg[1:]) or parent == ''.join(g_seg[:-1]):
+                            found_optimal = True
             if found:
                 correct_parent += 1
+            if found_optimal:
+                optimal_parent += 1
         print('%s correct segmentations of out %s' % (correct_segs, num))
-        if parents:
-            print('%s valid parents of out %s' % (correct_parent, num))
-            return float(correct_segs) / num, float(correct_parent) / num
-        return float(correct_segs) / num
+        print('%s valid parents of out %s' % (correct_parent, num))
+        print('%s optimal parents of out %s' % (optimal_parent, num))
+        return float(correct_segs) / num, float(correct_parent) / num, float(optimal_parent) / num

@@ -2,6 +2,7 @@ from __init__ import *
 import rlcompleter
 import readline
 import sys
+import os.path
 
 try:
     import cPickle as pickle
@@ -43,14 +44,19 @@ if __name__ == '__main__':
     if 'fullv' in sys.argv:
         v_size = 'full'
         file_v = 'data/en-wordvectors200_filtered.txt'
-    en_wordvectors = load_wordvectors(file_v)
+    binfile_v = file_v[:-3] + 'bin'
+    if os.path.isfile('binfile_v'):
+        en_wordvectors = load_wordvectors(binfile_v, binary=True)
+    else:
+        en_wordvectors = load_wordvectors(file_v)
 
     en_args = (en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
+    en_kwargs = {'segmentations': en_segmentations}
     if sys.version_info >= (3, 0):
         raw_input = input  # ghettooooooooo
 
     if 'optimize' in sys.argv:
-        en_morpho = MorphoChain(*en_args)
+        en_morpho = MorphoChain(*en_args, **en_kwargs)
         print('generating training data')
         train = en_morpho.genTrainingData()
         with open('out_py/dictvectorizer.p', 'wb') as f:
@@ -71,14 +77,15 @@ if __name__ == '__main__':
         if 'now' in sys.argv:
             with open('out_py/dictvectorizer.p', 'rb') as f:
                 dictvectorizer = pickle.load(f)
-            en_morpho = MorphoChain(*en_args, dictvectorizer=dictvectorizer)
+            en_morpho = MorphoChain(*en_args, dictvectorizer=dictvectorizer, **en_kwargs)
             loadweights()
         else:
             with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'rb') as f:
                 dictvectorizer = pickle.load(f)
             with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'rb') as f:
                 weights = pickle.load(f)
-            en_morpho = MorphoChain(*en_args, dictvectorizer=dictvectorizer, weightvector=weights)
+            en_morpho = MorphoChain(*en_args, dictvectorizer=dictvectorizer, weightvector=weights, **en_kwargs)
+        en_morpho.computeAccuracy()
 
     if 'run' in sys.argv:
         word = raw_input("Enter word: ")
