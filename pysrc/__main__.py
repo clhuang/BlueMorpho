@@ -42,15 +42,17 @@ if __name__ == '__main__':
         file_v = 'data/en-wordvectors200_med.txt'
     if 'fullv' in sys.argv:
         v_size = 'full'
-        file_v = 'data/en-wordvectors200_filtered.txt'
-    en_wordvectors = load_wordvectors(file_v)
+        file_v = 'data/en-wordvectors200_filtered.bin'
+    en_wordvectors = load_wordvectors(file_v, binary=file_v.endswith('bin'))
 
-    en_args = (en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
     if sys.version_info >= (3, 0):
         raw_input = input  # ghettooooooooo
 
+    en_args = (en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
+    en_kwargs = {'segmentations': en_trainsegmentations}
+
     if 'optimize' in sys.argv:
-        en_morpho = MorphoChain(*en_args)
+        en_morpho = MorphoChain(*en_args, **en_kwargs)
         print('generating training data')
         train = en_morpho.genTrainingData()
         with open('out_py/dictvectorizer.p', 'wb') as f:
@@ -70,23 +72,28 @@ if __name__ == '__main__':
                 en_morpho.setWeightVector(weights)
         if 'now' in sys.argv:
             with open('out_py/dictvectorizer.p', 'rb') as f:
-                dictvectorizer = pickle.load(f)
-            en_morpho = MorphoChain(*en_args, dictvectorizer=dictvectorizer)
+                en_kwargs['dictvectorizer'] = pickle.load(f)
+            en_morpho = MorphoChain(*en_args, **en_kwargs)
             loadweights()
         else:
             with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'rb') as f:
-                dictvectorizer = pickle.load(f)
+                en_kwargs['dictvectorizer'] = pickle.load(f)
             with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'rb') as f:
-                weights = pickle.load(f)
-            en_morpho = MorphoChain(*en_args, dictvectorizer=dictvectorizer, weightvector=weights)
+                en_kwargs['weights'] = pickle.load(f)
+            en_morpho = MorphoChain(*en_args, **en_kwargs)
 
     if 'run' in sys.argv:
         word = raw_input("Enter word: ")
         while True:
-            if word == 'RELOAD' and 'now' in sys.argv:
+            if word == 'ACCURACY_TRAIN':
+                print(en_morpho.computeAccuracy())
+            elif word =='ACCURACY_DEVEL':
+                print(en_morpho.computeAccuracy(en_devsegmentations))
+            elif word == 'RELOAD' and 'now' in sys.argv:
                 loadweights()
             elif word == 'EXIT':
                 break
-            pprint.pprint(en_morpho.predict(word))
-            print(en_morpho.genSeg(word))
+            else:
+                pprint.pprint(en_morpho.predict(word))
+                print(en_morpho.genSeg(word))
             word = raw_input("Enter word: ")

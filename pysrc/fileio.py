@@ -24,7 +24,7 @@ def read_wordcounts(filename, dump = False):
 
 
 # Reads from morpho challege
-def readCorpus(filename, dump=False):
+def readCorpus(filename, dump=None):
     f = open(filename, 'r')
     d = {}  # maps word to a tuple containing segmentation and a list of tags
     for line in f:
@@ -39,7 +39,7 @@ def readCorpus(filename, dump=False):
             tags.append([g.split(':')[1] for g in segment])
         d[word] = (segs, tags)
     if dump:
-        pickle.dump(d, open("data/corpus.p", "wb"))
+        pickle.dump(d, open(dump, "wb"))
     return d
 
 #read_wordlist('data/wordlist-2010.eng.txt')
@@ -53,4 +53,5 @@ def read_words(filename):
             s.add(line.strip())
     return s
 
-# readCorpus("data/goldstd_trainset.segmentation.eng.txt", True)
+# readCorpus('data/goldstd_trainset.segmentation.eng.txt', 'data/traincorpus.p')
+# readCorpus('data/goldstd_develset.segmentation.eng.txt', 'data/devcorpus.p')

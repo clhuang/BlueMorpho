@@ -28,6 +28,16 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
 
     widsneighbors contains tuples, each tuple contains (the ids of the words, ids of the word's neighbors).
     '''
+    f = get_optimizer_fn(X, nzs, widsneighbors, lamb, output)
+    return scipy.optimize.fmin_l_bfgs_b(
+            f,
+            np.zeros_like(X[0].toarray()).T,
+            bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
+            approx_grad=False,
+            fprime=None
+            )[0]
+
+def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
     idx = 0
     idxs = []  # starting, ending indices for each word/neighbor
     for nz in nzs:
@@ -84,11 +94,4 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
         return -fv, -gv
 
     BOUNDS = 50
-
-    return scipy.optimize.fmin_l_bfgs_b(
-            f,
-            np.zeros_like(X[0].toarray()).T,
-            bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
-            approx_grad=False,
-            fprime=None
-            )[0]
+    return f
