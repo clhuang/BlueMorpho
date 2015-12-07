@@ -32,13 +32,21 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
 
     iteration = [0]
 
+    Xcoo = X.tocoo()
+    bins = np.array(idxs)[:, 1]
+
     def f(weights):
-        Xp = np.exp(X.dot(weights)).flatten()  # e^{\theta*\phi(w, z)}
         F = np.zeros_like(nzs, dtype='float')  # \sum_z e^{\theta*\phi(w[i], z)}
-        G = np.zeros((len(nzs), X.shape[1]), dtype='float')   # \sum_z \phi(w[i], z)*e^{\theta*\phi(w[i], z)}
+        Xp = np.exp(X.dot(weights)).flatten()  # e^{\theta*\phi(w, z)}
+
         for i, (a, b) in enumerate(idxs):
             F[i] = Xp[a:b].sum()
-            G[i] = Xp[a:b] * X[a:b]
+
+        G = Xcoo.copy()
+        G.data *= Xp[G.row]
+        G.row = np.digitize(G.row, bins)
+        G = G.tocsr()[:len(bins)].toarray()
+
         fv = 0
         gv = 0
         for widx, nbrs in widsneighbors:

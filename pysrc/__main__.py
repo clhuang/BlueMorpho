@@ -18,8 +18,17 @@ if __name__ == '__main__':
         self.setWeightVector(weights)
 
     elif 'load' in sys.argv:
-        with open('out_py/weights.p', 'rb') as f:
-            weights = pickle.load(f)
-        en_morpho.setWeightVector(weights)
-        pprint.pprint(en_morpho.predict('adherement').most_common())
-        print(en_morpho.genSeg('adherement'))
+        def loadweights():
+            with open('out_py/weights.p', 'rb') as f:
+                weights = pickle.load(f)
+                en_morpho.setWeightVector(weights)
+        loadweights()
+        word = input("Enter word: ")
+        while True:
+            if word == 'RELOAD':
+                loadweights()
+            elif word == 'EXIT':
+                break
+            pprint.pprint(en_morpho.predict(word).most_common())
+            print(en_morpho.genSeg(word))
+            word = input("Enter word: ")
