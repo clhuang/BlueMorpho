@@ -32,8 +32,10 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
 
     iteration = [0]
 
-    Xcoo = X.tocoo()
-    bins = np.array(idxs)[:, 1]
+    Gcoo = X.tocoo()
+    orow = Gcoo.row
+    nrow = np.digitize(orow, np.array(idxs)[:, 1])
+    nfeatures = X.shape[1]
 
     def f(weights):
         F = np.zeros_like(nzs, dtype='float')  # \sum_z e^{\theta*\phi(w[i], z)}
@@ -42,10 +44,8 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
         for i, (a, b) in enumerate(idxs):
             F[i] = Xp[a:b].sum()
 
-        G = Xcoo.copy()
-        G.data *= Xp[G.row]
-        G.row = np.digitize(G.row, bins)
-        G = G.tocsr()[:len(bins)].toarray()
+        data = Gcoo.data * Xp[orow]
+        G = scipy.sparse.coo_matrix((data, (nrow, Gcoo.col)), (len(idxs), nfeatures)).todense()
 
         fv = 0
         gv = 0

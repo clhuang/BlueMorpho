@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     if 'optimize' in sys.argv:
         weights = optimize_weights(*train)
-        self.setWeightVector(weights)
+        en_morpho.setWeightVector(weights)
 
     elif 'load' in sys.argv:
         def loadweights():
@@ -29,6 +29,6 @@ if __name__ == '__main__':
                 loadweights()
             elif word == 'EXIT':
                 break
-            pprint.pprint(en_morpho.predict(word).most_common())
+            pprint.pprint(en_morpho.predict(word))
             print(en_morpho.genSeg(word))
             word = input("Enter word: ")
