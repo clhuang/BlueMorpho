@@ -50,8 +50,6 @@ if __name__ == '__main__':
     else:
         en_wordvectors = load_wordvectors(file_v)
 
-    en_args = (en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
-    en_kwargs = {'segmentations': en_segmentations}
     if sys.version_info >= (3, 0):
         raw_input = input  # ghettooooooooo
 
