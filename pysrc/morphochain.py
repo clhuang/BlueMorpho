@@ -26,7 +26,7 @@ class ParentType():
 class MorphoChain(object):
     def __init__(self, wordvectors, vocab, affixes, affixNeighbours, dictionary=None,
                  alphabet=string.ascii_lowercase, dictvectorizer=None,
-                 weightvector=None):
+                 weightvector=None, segmentations=None):
         self.wordvectors = wordvectors
         self.vocab = vocab
         self.dictionary = dictionary
@@ -34,6 +34,8 @@ class MorphoChain(object):
         self.alphabet = alphabet
         self.dictvectorizer = dictvectorizer or DictVectorizer()
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
+        self.weightvector = weightvector
+        self.segmentations = segmentations
 
     def setWeightVector(self, weightvector):
         self.weightvector = weightvector
@@ -257,15 +259,20 @@ class MorphoChain(object):
             return 0.0
         return self.wordvectors.similarity(w1, w2)
 
-    def computeAccuracy(self, segmentations=accuracy.gold):
+    def computeAccuracy(self, segmentations=None):
+        if segmentations is None:
+            segmentations = self.segmentations
+        wordlist = segmentations.keys()
         predictions = zip(wordlist, map(self.genSeg, wordlist))
         return accuracy.score(segmentations, predictions)
 
-    def computeParentValidity(self, segmentations=accuracy.gold, k=1):
+    def computeParentValidity(self, segmentations=None, k=1):
         """
         segmentations: as computed by readCorpus.
         k: look at k highest parents
         """
+        if segmentations is None:
+            segmentations = self.segmentations
         SEG_SEP = '/' # change if SEG_SEP changes above
         num = 0
         correct_segs = 0

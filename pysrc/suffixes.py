@@ -1,9 +1,13 @@
 import fileio
 from collections import Counter, defaultdict
 import math
-import pickle
 import numpy as np
 import numpy.linalg
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 MIN_WORD_FREQ = 1
 MAX_AFFIX_LEN = 6

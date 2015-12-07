@@ -1,4 +1,7 @@
-import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 
 def score(gold_segs_list, predictions_segs_list):
@@ -35,7 +38,3 @@ def score(gold_segs_list, predictions_segs_list):
     recall = float(correct) / goldTotal
     print('Precision: %s\nRecall: %s' % (precision, recall))
     return precision, recall
-
-
-with open('data/corpus.p', 'rb') as f:
-    gold = pickle.load(f)

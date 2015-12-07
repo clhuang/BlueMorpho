@@ -1,6 +1,9 @@
 from gensim.models.word2vec import Word2Vec
 from collections import Counter
-import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 def load_wordvectors(filename, fvocab=None, binary=False):
     return Word2Vec.load_word2vec_format(filename, fvocab=fvocab, binary=binary)
