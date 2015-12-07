@@ -6,11 +6,14 @@ import pickle
 
 readline.parse_and_bind('tab: complete')
 
+
 if __name__ == '__main__':
     # while True:
         # word = input("Input word: ")
         # pprint.pprint(en_morpho.getParentsFeatures(word))
     # pprint.pprint(train)
+    if sys.version_info >= (3, 0):
+        raw_input = input  # ghettooooooooo
 
     if 'optimize' in sys.argv:
         en_morpho = MorphoChain(en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
