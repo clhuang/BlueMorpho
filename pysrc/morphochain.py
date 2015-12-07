@@ -224,7 +224,7 @@ class MorphoChain(object):
 
         if "\'" in word:
             parts = word.split('\'')
-            segmentation = self.genSeg(parts[0]) + SEG_SEP
+            segmentation = self.genSeg(parts[0])
             for part in parts[1:]:
                 segmentation += SEG_SEP + '\'' + part
             return segmentation
