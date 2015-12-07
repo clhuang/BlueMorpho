@@ -45,7 +45,9 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
             F[i] = Xp[a:b].sum()
 
         data = Gcoo.data * Xp[orow]
-        G = scipy.sparse.coo_matrix((data, (nrow, Gcoo.col)), (len(idxs), nfeatures)).todense()
+        G = np.zeros((len(idxs), nfeatures), dtype=Gcoo.dtype)
+        scipy.sparse._sparsetools.coo_todense(len(idxs), nfeatures, len(nrow),
+                                              nrow, Gcoo.col, data, G.ravel('A'), 0)
 
         fv = 0
         gv = 0

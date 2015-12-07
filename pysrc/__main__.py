@@ -10,10 +10,10 @@ if __name__ == '__main__':
     # while True:
         # word = input("Input word: ")
         # pprint.pprint(en_morpho.getParentsFeatures(word))
-    train = en_morpho.genTrainingData()
     # pprint.pprint(train)
 
     if 'optimize' in sys.argv:
+        train = en_morpho.genTrainingData()
         weights = optimize_weights(*train)
         en_morpho.setWeightVector(weights)
 
