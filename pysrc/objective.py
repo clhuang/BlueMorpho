@@ -7,6 +7,8 @@ try:
 except:
     import pickle
 
+BOUNDS = 50
+MAX_ITERS = 500
 
 def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
     '''
@@ -30,12 +32,57 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
     '''
     f = get_optimizer_fn(X, nzs, widsneighbors, lamb, output)
     return scipy.optimize.fmin_l_bfgs_b(
-            f,
-            np.zeros_like(X[0].toarray()).T,
-            bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
-            approx_grad=False,
-            fprime=None
-            )[0]
+        f,
+        np.zeros_like(X[0].toarray()).T,
+        bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
+        approx_grad=False,
+        fprime=None,
+        maxiter=MAX_ITERS)[0]
+
+
+def optimize_weights_supervised(X, nzs, widsneighbors,
+                                Xsup, nzs_sup, cxs_sup,
+                                lamb=0, lamb2=1, output=True):
+    fus = get_optimizer_fn(X, nzs, widsneighbors, lamb, output)
+    fsup = get_logprob_fn(Xsup, nzs_sup, cxs_sup)
+    def fcomb(weights):
+        f1, g1 = fus(weights)
+        f2, g2 = fsup(weights)
+        return f1 + lamb2 * f2, g1 + lamb2 * g2
+
+    return scipy.optimize.fmin_l_bfgs_b(
+        fcomb,
+        np.zeros_like(X[0].toarray()).T,
+        bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
+        approx_grad=False,
+        fprime=None,
+        maxiter=MAX_ITERS)[0]
+
+
+def get_logprob_fn(X, nzs, cxs):
+
+    Xdense = X.toarray()
+
+    idx = 0
+    idxs = []
+    for nz in nzs:
+        idxs.append((idx, idx+nz))
+        idx += nz
+
+    nexamples, nfeatures = X.shape
+    bins = np.digitize(np.arange(nexamples), np.array(idxs)[:, 1])
+
+    def f(weights):
+        Xp = X.dot(weights).flatten()
+        Xpexp = np.exp(Xp)
+        normcs = np.bincount(bins, Xpexp, minlength=len(nzs))
+        logprobs = Xp[cxs] - np.log(normcs)
+        grad = Xdense[cxs].sum(0)
+        for i, (a, b) in enumerate(idxs):
+            grad -= (Xdense[a:b] * Xpexp[a:b]) / normcs[i]
+        return logprobs.sum(), grad
+
+    return f
 
 def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
     idx = 0
@@ -50,7 +97,6 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
     orow = Gcoo.row
     nrow = np.digitize(orow, np.array(idxs)[:, 1])
     nexamples, nfeatures = X.shape
-    nnrow = np.zeros_like(nrow)
 
     arow = np.digitize(np.arange(nexamples), np.array(idxs)[:, 1])
 
@@ -59,7 +105,6 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
         fnbridx[widx] = len(widsneighbors)
         fnbridx[nbrs] = i
     widx = np.fromiter((i[0] for i in widsneighbors), int)
-    idxc = np.zeros_like(nzs, dtype=int)
 
     import time
 
@@ -93,5 +138,4 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
         # return negative because we want to actually maximize
         return -fv, -gv
 
-    BOUNDS = 50
     return f
