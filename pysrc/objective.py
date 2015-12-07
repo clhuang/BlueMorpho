@@ -1,7 +1,11 @@
 import scipy.optimize
 import numpy.linalg
 import numpy as np
-import pickle
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 
 def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
