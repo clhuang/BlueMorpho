@@ -180,25 +180,24 @@ class MorphoChain(object):
         '''
         curid = [0] ## ghetto hack because python 2 doesn't have nonlocal
         dicts = []
-        idxs = {}
         widsneighbors = []
         nzs = []
 
         def addword(word):
             parentsFeatures = self.getParentsFeatures(word)
-            idxs[word] = curid[0]
             curid[0] += 1
             dicts.extend(parentsFeatures.values())
             nzs.append(len(parentsFeatures))
 
         for word in self.vocab:
-            if word not in idxs:
-                addword(word)
+            widx = curid[0]
+            addword(word)
             neighbors = self.genNeighbors(word)
+            neighboridxs = []
             for neighbor in neighbors:
-                if neighbor not in idxs:
-                    addword(neighbor)
-            widsneighbors.append((idxs[word], [idxs[neighbor] for neighbor in neighbors]))
+                neighboridxs.append(curid[0])
+                addword(neighbor)
+            widsneighbors.append((widx, neighboridxs))
 
         X = self.dictvectorizer.fit_transform(dicts)
         return X, nzs, widsneighbors
