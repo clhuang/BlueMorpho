@@ -1,7 +1,7 @@
 import pickle
 
 
-def eval(gold_segs_list, predictions_segs_list):
+def score(gold_segs_list, predictions_segs_list):
     correct = 0
     goldTotal = 0
     predTotal = 0
@@ -10,7 +10,7 @@ def eval(gold_segs_list, predictions_segs_list):
     for word, pred_seg in predictions_segs_list:
         pred_segs = pred_seg.split('/')
         if word not in gold_segs_list:
-            print "Error: " + word
+            print('Error: %s' % word)
             continue
         predTotal += len(pred_segs)
         bestc = 0
@@ -31,9 +31,10 @@ def eval(gold_segs_list, predictions_segs_list):
 
         goldTotal += bestg
         correct += bestc
-    precision = correct / predTotal
-    recall = correct / goldTotal
-    print "Precision: " + precision + " " + "Recall: " + recall
+    precision = float(correct) / predTotal
+    recall = float(correct) / goldTotal
+    print('Precision: %s\nRecall: %s' % (precision, recall))
+    return precision, recall
 
 
 gold = pickle.load(open('data/corpus.p'))
