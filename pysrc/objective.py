@@ -11,6 +11,26 @@ except:
 BOUNDS = 50
 MAX_ITERS = 500
 
+def output_decorate(func):
+    iteration = [0]
+
+    def newf(weights):
+        stime = time.time()
+        fv, gv = func(weights)
+        iteration[0] += 1
+        with open('out_py/weights.p', 'wb') as f:
+            pickle.dump(weights, f)
+        print('Call %s' % iteration[0])
+        print('\tWeights range: %s %s' % (weights.min(), weights.max()))
+        print('\tWeights norm (d=%s): %s' % (weights.size, np.linalg.norm(weights)))
+        print('\tFunction: %s' % fv)
+        print('\tGradient range: %s %s' % (gv.min(), gv.max()))
+        print('\tTime: %s' % (time.time() - stime))
+
+        return fv, gv
+    return newf
+
+
 def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
     '''
     X is a feature matrix, where each row corresponds
@@ -31,7 +51,9 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
 
     widsneighbors contains tuples, each tuple contains (the ids of the words, ids of the word's neighbors).
     '''
-    f = get_optimizer_fn(X, nzs, widsneighbors, lamb, output)
+    f = get_optimizer_fn(X, nzs, widsneighbors, lamb)
+    if output:
+        f = output_decorate(f)
     return scipy.optimize.fmin_l_bfgs_b(
         f,
         np.zeros_like(X[0].toarray()).T,
@@ -44,12 +66,15 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
 def optimize_weights_supervised(X, nzs, widsneighbors,
                                 Xsup, nzs_sup, cxs_sup,
                                 lamb=0, lamb2=1, output=True):
-    fus = get_optimizer_fn(X, nzs, widsneighbors, lamb, output)
+    fus = get_optimizer_fn(X, nzs, widsneighbors, lamb)
     fsup = get_logprob_fn(Xsup, nzs_sup, cxs_sup)
     def fcomb(weights):
         f1, g1 = fus(weights)
         f2, g2 = fsup(weights)
         return f1 + lamb2 * f2, g1 + lamb2 * g2
+
+    if output:
+        fcomb = output_decorate(fcomb)
 
     return scipy.optimize.fmin_l_bfgs_b(
         fcomb,
@@ -86,14 +111,12 @@ def get_logprob_fn(X, nzs, cxs):
 
     return f
 
-def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
+def get_optimizer_fn(X, nzs, widsneighbors, lamb=0):
     idx = 0
     idxs = []  # starting, ending indices for each word/neighbor
     for nz in nzs:
         idxs.append((idx, idx+nz))
         idx += nz
-
-    iteration = [0]
 
     Gcoo = X.tocoo()
     orow = Gcoo.row
@@ -125,16 +148,6 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
 
         fv -= lamb * numpy.linalg.norm(weights)**2
         gv -= 2 * lamb * weights
-        iteration[0] += 1
-        if output:
-            with open('out_py/weights.p', 'wb') as f:
-                pickle.dump(weights, f)
-            print('Call %s' % iteration[0])
-            print('\tWeights range: %s %s' % (weights.min(), weights.max()))
-            print('\tWeights norm (d=%s): %s' % (weights.size, np.linalg.norm(weights)))
-            print('\tFunction: %s' % fv)
-            print('\tGradient range: %s %s' % (gv.min(), gv.max()))
-            print('\tTime: %s' % (time.time() - stime))
         # return negative because we want to actually maximize
         return -fv, -gv
 
