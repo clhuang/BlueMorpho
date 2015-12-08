@@ -283,7 +283,6 @@ class MorphoChain(object):
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
-            # is this what we want to return? or just 0?
             return 0.0
         return self.wordvectors.similarity(w1, w2)
 
@@ -343,32 +342,55 @@ class MorphoChain(object):
         if segmentations is None:
             segmentations = self.segmentations
         def parentScore(parent, word): # can we train on these weights :)
+            FREQ_WEIGHT = 1
+            SIM_WEIGHT = 1
+            SIM_BASE = 12
+            LEN_WEIGHT = 1
+            LEN_BASE = 5
+            LENGTH_WEIGHT = 30
+            LENGTH_POWER = 2
             score = 0
             if parent in self.vocab:
-                score += 1
-            score += max(0, self.similarity(parent, word))
+                score += FREQ_WEIGHT * math.log(self.vocab[parent])
+            score += SIM_WEIGHT * SIM_BASE ** max(0, self.similarity(parent, word))
+            score += LEN_WEIGHT * LEN_BASE ** (float(len(parent)) / len(word))
+            score -= LENGTH_WEIGHT / max(1, len(parent)) ** LENGTH_POWER
             return score
         def chain(segs, tags):
             def getAffix(s, t):
                 return s if t[0] == '+' else t[:t.find('_')]
+            def suffix_type(s, t):
+                if t[0] == '+':
+                    return ParentType.SUFFIX
+                t = t[:t.find('_')]
+                if s == t:
+                    return ParentType.SUFFIX
+                elif len(s) == len(t):
+                    return ParentType.MODIFY
+                elif s[:-1] == t:
+                    return ParentType.REPEAT
+                else:
+                    return ParentType.DELETE
             if len(segs) <= 1:
-                return getAffix(segs[0], tags[0])
+                root = getAffix(segs[0], tags[0])
+                return [(root, ParentTransformation(root, ParentType.STOP))]
             word = ''.join(segs[:-1]) + getAffix(segs[-1], tags[-1])
             word = word.replace('~', '') # null segments
             parent_suf = ''.join(segs[:-2]) + getAffix(segs[-2], tags[-2])
             parent_suf = parent_suf.replace('~', '')
-            pre_parent = ''.join(segs[1:])
+            pre_parent = ''.join(segs[1:-1]) + getAffix(segs[-1], tags[-1])
             pre_parent = pre_parent.replace('~', '')
-            if segs[-1] == '~':
-                return [word] + chain(segs[:-1], tags[:-1])
-            elif tags[-1][0] == '+': # inflectional
-                return [word] + chain(segs[:-1], tags[:-1])
+            type_suf = suffix_type(segs[-2], tags[-2])
+            pre_pair = [(word, ParentTransformation(pre_parent, ParentType.PREFIX))]
+            pair_suf = [(word, ParentTransformation(parent_suf, type_suf))]
+            if tags[-1][0] == '+': # inflectional
+                return pair_suf + chain(segs[:-1], tags[:-1])
             score_suf = parentScore(parent_suf, word)
             pre_score = parentScore(pre_parent, word)
-            if pre_score < score_suf:
-                return [word] + chain(segs[1:], tags[1:])
+            if pre_score > score_suf:
+                return pre_pair + chain(segs[1:], tags[1:])
             else:
-                return [word] + chain(segs[:-1], tags[:-1])
+                return pair_suf + chain(segs[:-1], tags[:-1])
         d = {}
         for word, (g_segs, g_tags) in segmentations.iteritems():
             d[word] = []
