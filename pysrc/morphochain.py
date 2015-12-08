@@ -310,3 +310,40 @@ class MorphoChain(object):
         print('%s valid parents of out %s' % (correct_parent, num))
         print('%s optimal parents of out %s' % (optimal_parent, num))
         return float(correct_segs) / num, float(correct_parent) / num, float(optimal_parent) / num
+
+    def genGoldChains(self, segmentations=None):
+        if segmentations is None:
+            segmentations = self.segmentations
+        def parentScore(parent, word): # can we train on these weights :)
+            score = 0
+            if parent in self.vocab:
+                score += 1
+            score += max(0, self.similarity(parent, word))
+            return score
+        def chain(segs, tags):
+            def getAffix(s, t):
+                return s if t[0] == '+' else t[:t.find('_')]
+            if len(segs) <= 1:
+                return getAffix(segs[0], tags[0])
+            word = ''.join(segs[:-1]) + getAffix(segs[-1], tags[-1])
+            word = word.replace('~', '') # null segments
+            parent_suf = ''.join(segs[:-2]) + getAffix(segs[-2], tags[-2])
+            parent_suf = parent_suf.replace('~', '')
+            pre_parent = ''.join(segs[1:])
+            pre_parent = pre_parent.replace('~', '')
+            if segs[-1] == '~':
+                return [word] + chain(segs[:-1], tags[:-1])
+            elif tags[-1][0] == '+': # inflectional
+                return [word] + chain(segs[:-1], tags[:-1])
+            score_suf = parentScore(parent_suf, word)
+            pre_score = parentScore(pre_parent, word)
+            if pre_score < score_suf:
+                return [word] + chain(segs[1:], tags[1:])
+            else:
+                return [word] + chain(segs[:-1], tags[:-1])
+        d = {}
+        for word, (g_segs, g_tags) in segmentations.iteritems():
+            d[word] = []
+            for segs, tags in zip(g_segs, g_tags):
+                d[word].append(chain(segs, tags))
+        return d

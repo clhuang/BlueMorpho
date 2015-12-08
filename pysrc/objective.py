@@ -1,3 +1,4 @@
+import time
 import scipy.optimize
 import numpy.linalg
 import numpy as np
@@ -105,8 +106,6 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0, output=True):
         fnbridx[widx] = len(widsneighbors)
         fnbridx[nbrs] = i
     widx = np.fromiter((i[0] for i in widsneighbors), int)
-
-    import time
 
     def f(weights):
         stime = time.time()
