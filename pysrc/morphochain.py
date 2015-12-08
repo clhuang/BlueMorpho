@@ -213,7 +213,7 @@ class MorphoChain(object):
         dicts = []
         nzs = []
         cxs = []
-        chainsets = self.genGoldChains().itervalues()
+        chainsets = self.genGoldChains().values()
         chains = itertools.chain(*chainsets)
         wordpairs = itertools.chain(*chains)
         for word, parent in wordpairs:
@@ -392,7 +392,7 @@ class MorphoChain(object):
             else:
                 return pair_suf + chain(segs[:-1], tags[:-1])
         d = {}
-        for word, (g_segs, g_tags) in segmentations.iteritems():
+        for word, (g_segs, g_tags) in segmentations.items():
             d[word] = []
             for segs, tags in zip(g_segs, g_tags):
                 d[word].append(chain(segs, tags))

@@ -3,6 +3,7 @@ import rlcompleter
 import readline
 import sys
 import os.path
+import argparse
 
 try:
     import cPickle as pickle
@@ -12,38 +13,39 @@ except:
 readline.parse_and_bind('tab: complete')
 
 """
-args: [optimize | load | run] [supervised] [now] [wordlist_size] [wordvector_size]
+args: [optimize | load | run] [--supervised=lamb] [--now]
+[--vectors=[small, med, large, full]] [--vocab=[small, med, large, full]]
 
 optimize: run the optimizer to find weights
 load: load weights to do stuff with
 run: like load, but has a simple text interface
-supervised: for the supervised model
+supervised: for the supervised model, if lamb is not 0, by how much to weight the likelihood
 now: option for load and run to use dictvectorizer and weights currently being generated
 wordlist_size: default is smallw, can also set to medw, largew, or fullw for different sizes of training
 wordvector_size: default is smallv, can also set to medv or fullv for different sizes of word2vec
 """
 
 if __name__ == '__main__':
-    w_size = 'small'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('command', choices=['optimize', 'load', 'run'])
+    parser.add_argument('--now', action='store_true')
+    parser.add_argument('--vocab', choices=['small', 'med', 'large', 'full'], default='small')
+    parser.add_argument('--vectors', choices=['small', 'med', 'large', 'full'], default='small')
+    parser.add_argument('--supervised', type=float, default=0.0)
+    args = parser.parse_args()
     file_w = 'data/wordlist-2010.small.txt'
-    if 'medw' in sys.argv:
-        w_size = 'med'
+    if args.vocab == 'med':
         file_w = 'data/wordlist-2010.med.txt'
-    if 'largew' in sys.argv:
-        w_size = 'large'
+    if args.vocab == 'large':
         file_w = 'data/wordlist-2010.large.txt'
-    if 'fullw' in sys.argv:
-        w_size = 'full'
+    if args.vocab == 'full':
         file_w = 'data/wordlist-2010.eng.txt'
     en_wordcounts = read_wordcounts(file_w)
 
-    v_size = 'small'
     file_v = 'data/en-wordvectors200_small.txt'
-    if 'medv' in sys.argv:
-        v_size = 'med'
+    if args.vectors == 'med':
         file_v = 'data/en-wordvectors200_med.txt'
-    if 'fullv' in sys.argv:
-        v_size = 'full'
+    if args.vectors == 'full':
         file_v = 'data/en-wordvectors200_filtered.txt'
 
     binfile_v = file_v[:-3] + 'bin'
@@ -58,54 +60,56 @@ if __name__ == '__main__':
     en_args = (en_wordvectors, en_wordcounts, en_affixes, en_affix_corr)
     en_kwargs = {'segmentations': en_trainsegmentations}
 
-    if 'optimize' in sys.argv:
+    if args.command == 'optimize':
         en_morpho = MorphoChain(*en_args, **en_kwargs)
         print('generating training data')
         train = en_morpho.genTrainingData()
         with open('out_py/dictvectorizer.p', 'wb') as f:
             pickle.dump(en_morpho.dictvectorizer, f)
-        with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'wb') as f:
+        with open('out_py/dictvectorizer.%s-%s.p' % (args.vocab, args.vectors), 'wb') as f:
             pickle.dump(en_morpho.dictvectorizer, f)
-        if 'supervised' in sys.argv:
+        if args.supervised:
             sups = en_morpho.genGoldsegTrainingData()
             print('training data saved, optimizing weights')
-            weights = optimize_weights_supervised(*(train + sups))
+            weights = optimize_weights_supervised(*(train + sups), lamb2=args.supervised)
             en_morpho.setWeightVector(weights)
-            with open('out_py/weights.supervised.%s-%s.p' % (w_size,v_size), 'wb') as f:
+            with open('out_py/weights.supervised%s.%s-%s.p' %
+                      (args.supervised, args.vocab, args.vectors), 'wb') as f:
                 pickle.dump(weights, f)
         else:
             print('training data saved, optimizing supervised weights')
             weights = optimize_weights(*train)
             en_morpho.setWeightVector(weights)
-            with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'wb') as f:
+            with open('out_py/weights.%s-%s.p' % (args.vocab, args.vectors), 'wb') as f:
                 pickle.dump(weights, f)
 
-    elif 'load' in sys.argv or 'run' in sys.argv:
+    elif args.command == 'load' or args.command == 'run':
         def loadweights():
             with open('out_py/weights.p', 'rb') as f:
                 weights = pickle.load(f)
                 en_morpho.setWeightVector(weights)
-        if 'now' in sys.argv:
+        if args.now:
             with open('out_py/dictvectorizer.p', 'rb') as f:
                 en_kwargs['dictvectorizer'] = pickle.load(f)
             en_morpho = MorphoChain(*en_args, **en_kwargs)
             loadweights()
         else:
-            with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'rb') as f:
+            with open('out_py/dictvectorizer.%s-%s.p' % (args.vocab, args.vectors), 'rb') as f:
                 en_kwargs['dictvectorizer'] = pickle.load(f)
-            with open('out_py/weights%s.%s-%s.p' % ('.supervised' if  'supervised' in sys.argv else '', w_size,v_size), 'rb') as f:
+            with open('out_py/weights%s.%s-%s.p' % ('.supervised%s' % args.supervised
+                                                    if args.supervised else '', args.vocab, args.vectors), 'rb') as f:
                 en_kwargs['weightvector'] = pickle.load(f)
             en_morpho = MorphoChain(*en_args, **en_kwargs)
         en_morpho.computeAccuracy(en_devsegmentations)
 
-    if 'run' in sys.argv:
+    if args.command == 'run':
         word = raw_input("Enter word: ")
         while True:
             if word == 'ACCURACY_TRAIN':
                 print(en_morpho.computeAccuracy())
             elif word =='ACCURACY_DEVEL':
                 print(en_morpho.computeAccuracy(en_devsegmentations))
-            elif word == 'RELOAD' and 'now' in sys.argv:
+            elif word == 'RELOAD' and args.now:
                 loadweights()
             elif word == 'EXIT':
                 break
