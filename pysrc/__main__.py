@@ -12,11 +12,12 @@ except:
 readline.parse_and_bind('tab: complete')
 
 """
-args: [optimize | load | run] [now] [wordlist_size] [wordvector_size]
+args: [optimize | load | run] [supervised] [now] [wordlist_size] [wordvector_size]
 
 optimize: run the optimizer to find weights
 load: load weights to do stuff with
 run: like load, but has a simple text interface
+supervised: for the supervised model
 now: option for load and run to use dictvectorizer and weights currently being generated
 wordlist_size: default is smallw, can also set to medw, largew, or fullw for different sizes of training
 wordvector_size: default is smallv, can also set to medv or fullv for different sizes of word2vec
@@ -65,11 +66,19 @@ if __name__ == '__main__':
             pickle.dump(en_morpho.dictvectorizer, f)
         with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'wb') as f:
             pickle.dump(en_morpho.dictvectorizer, f)
-        print('training data saved, optimizing weights')
-        weights = optimize_weights(*train)
-        en_morpho.setWeightVector(weights)
-        with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'wb') as f:
-            pickle.dump(weights, f)
+        if 'supervised' in sys.argv:
+            sups = en_morpho.genGoldsegTrainingData()
+            print('training data saved, optimizing weights')
+            weights = optimize_weights_supervised(*(train + sups))
+            en_morpho.setWeightVector(weights)
+            with open('out_py/weights.supervised.%s-%s.p' % (w_size,v_size), 'wb') as f:
+                pickle.dump(weights, f)
+        else:
+            print('training data saved, optimizing supervised weights')
+            weights = optimize_weights(*train)
+            en_morpho.setWeightVector(weights)
+            with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'wb') as f:
+                pickle.dump(weights, f)
 
     elif 'load' in sys.argv or 'run' in sys.argv:
         def loadweights():
@@ -84,7 +93,7 @@ if __name__ == '__main__':
         else:
             with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'rb') as f:
                 en_kwargs['dictvectorizer'] = pickle.load(f)
-            with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'rb') as f:
+            with open('out_py/weights%s.%s-%s.p' % ('.supervised' if  'supervised' in sys.argv else '', w_size,v_size), 'rb') as f:
                 en_kwargs['weightvector'] = pickle.load(f)
             en_morpho = MorphoChain(*en_args, **en_kwargs)
         en_morpho.computeAccuracy(en_devsegmentations)

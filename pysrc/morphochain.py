@@ -1,6 +1,7 @@
 from collections import namedtuple, Counter
 import math
 import string
+import itertools
 from enum import Enum
 import numpy as np
 import scipy.spatial.distance
@@ -209,11 +210,13 @@ class MorphoChain(object):
         return X, nzs, widsneighbors
 
     def genGoldsegTrainingData(self):
-        # TODO get chains
         dicts = []
         nzs = []
         cxs = []
-        for word, parent in stuff:
+        chainsets = self.genGoldChains().itervalues()
+        chains = itertools.chain(*chainsets)
+        wordpairs = itertools.chain(*chains)
+        for word, parent in wordpairs:
             parentsFeatures = self.getParentsFeatures(word)
 
             parents = list(parentsFeatures.keys())
@@ -228,9 +231,6 @@ class MorphoChain(object):
 
         X = self.dictvectorizer.transform(dicts)
         return X, nzs, cxs
-
-
-
 
     def scoreFeatures(self, featureDict):
         fv = self.dictvectorizer.transform(featureDict)

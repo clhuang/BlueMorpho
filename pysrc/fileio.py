@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import sys
 from gensim.models.word2vec import Word2Vec
 from collections import Counter, defaultdict
 import re
@@ -56,7 +58,7 @@ def read_words(filename):
     return s
 
 
-ROMAN_TT = str.maketrans('öüçýiþðâ', 'OUCiISGA')
+ROMAN_TT = {ord(c): ord(t) for c, t in zip('öüçýiþðâ', 'OUCiISGA')}
 def romanize_turkish(s):
     return s.lower().translate(ROMAN_TT)
 

@@ -1,3 +1,6 @@
+# Paper?
+*.pdf
+
 # Output files
 /out_py
 /out
@@ -13,13 +16,23 @@
 
 # LaTeX compiled files
 *.aux
+*.bbl
+*.blg
+*.brf
 *.fdb_latexmk
 *.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lol
+*.lot
 *.out
 *.pre
-*.log
-*.pdf
 *.synctex.gz
+*.toc
+*.x.gnuplot
 
 # Swap files
 *.sw?

@@ -80,7 +80,8 @@ def get_logprob_fn(X, nzs, cxs):
         logprobs = Xp[cxs] - np.log(normcs)
         grad = Xdense[cxs].sum(0)
         for i, (a, b) in enumerate(idxs):
-            grad -= (Xdense[a:b] * Xpexp[a:b]) / normcs[i]
+            # check that this is what you want to do
+            grad -= np.dot(Xpexp[a:b].reshape(1,-1), Xdense[a:b]).flatten() / normcs[i]
         return -logprobs.sum(), -grad  # want to maximize
 
     return f
