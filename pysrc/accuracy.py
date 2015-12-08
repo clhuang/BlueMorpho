@@ -1,3 +1,4 @@
+import numpy as np
 try:
     import cPickle as pickle
 except:
@@ -19,7 +20,7 @@ def score(gold_segs_list, predictions_segs_list):
         bestc = 0
         bestg = 0
         for gold_segs in gold_segs_list[word][0]:
-            gset = set(gold_segs)
+            gset = set(i for i in gold_segs if i != '~')
             pset = set(pred_segs)
             num_correct_segs = len(gset & pset)
             num_gold_segs = len(gold_segs)

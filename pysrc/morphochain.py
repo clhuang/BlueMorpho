@@ -32,7 +32,7 @@ class MorphoChain(object):
         self.dictionary = dictionary
         self.prefixes, self.suffixes = affixes
         self.alphabet = alphabet
-        self.dictvectorizer = dictvectorizer or DictVectorizer()
+        self.dictvectorizer = dictvectorizer
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
         self.weightvector = weightvector
         self.segmentations = segmentations
@@ -201,8 +201,36 @@ class MorphoChain(object):
                 addword(neighbor)
             widsneighbors.append((widx, neighboridxs))
 
-        X = self.dictvectorizer.fit_transform(dicts)
+        if self.dictvectorizer is None:
+            self.dictvectorizer = DictVectorizer()
+            X = self.dictvectorizer.fit_transform(dicts)
+        else:
+            X = self.dictvectorizer.transform(dicts)
         return X, nzs, widsneighbors
+
+    def genGoldsegTrainingData(self):
+        # TODO get chains
+        dicts = []
+        nzs = []
+        cxs = []
+        for word, parent in stuff:
+            parentsFeatures = self.getParentsFeatures(word)
+
+            parents = list(parentsFeatures.keys())
+            features = list(parentsFeatures.values())
+            try:
+                idx = parents.index(parent)
+            except ValueError:
+                continue
+            nzs.append(len(parents))
+            cxs.append(idx + len(dicts))
+            dicts.extend(features)
+
+        X = self.dictvectorizer.transform(dicts)
+        return X, nzs, cxs
+
+
+
 
     def scoreFeatures(self, featureDict):
         fv = self.dictvectorizer.transform(featureDict)
