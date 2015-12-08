@@ -100,7 +100,8 @@ if __name__ == '__main__':
                                                     if args.supervised else '', args.vocab, args.vectors), 'rb') as f:
                 en_kwargs['weightvector'] = pickle.load(f)
             en_morpho = MorphoChain(*en_args, **en_kwargs)
-        en_morpho.computeAccuracy(en_devsegmentations)
+
+    en_morpho.computeAccuracy(en_devsegmentations)
 
     if args.command == 'run':
         word = raw_input("Enter word: ")
