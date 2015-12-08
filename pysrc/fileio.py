@@ -1,5 +1,7 @@
 from gensim.models.word2vec import Word2Vec
-from collections import Counter
+from collections import Counter, defaultdict
+import re
+import codecs
 try:
     import cPickle as pickle
 except:
@@ -52,6 +54,29 @@ def read_words(filename):
         for line in f.readlines():
             s.add(line.strip())
     return s
+
+
+ROMAN_TT = str.maketrans('öüçýiþðâ', 'OUCiISGA')
+def romanize_turkish(s):
+    return s.lower().translate(ROMAN_TT)
+
+
+def read_dictionary(filename):
+    eng_to_tur = defaultdict(lambda: [])
+    tur_to_eng = defaultdict(lambda: [])
+
+    WWDR = re.compile(r'^([^ ]+)\t([^ ]+)\t')
+    with codecs.open(filename, 'r', 'latin-1') as f:
+        for line in f:
+            match = WWDR.match(line)
+            if match:
+                eng, tur = match.groups()
+                eng = eng.lower()
+                tur = romanize_turkish(tur)
+                eng_to_tur[eng].append(tur)
+                tur_to_eng[tur].append(eng)
+    return eng_to_tur, tur_to_eng
+
 
 # readCorpus('data/goldstd_trainset.segmentation.eng.txt', 'data/traincorpus.p')
 # readCorpus('data/goldstd_develset.segmentation.eng.txt', 'data/devcorpus.p')
