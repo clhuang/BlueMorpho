@@ -283,7 +283,6 @@ class MorphoChain(object):
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
-            # is this what we want to return? or just 0?
             return 0.0
         return self.wordvectors.similarity(w1, w2)
 
@@ -343,10 +342,19 @@ class MorphoChain(object):
         if segmentations is None:
             segmentations = self.segmentations
         def parentScore(parent, word): # can we train on these weights :)
+            FREQ_WEIGHT = 1
+            SIM_WEIGHT = 1
+            SIM_BASE = 12
+            LEN_WEIGHT = 1
+            LEN_BASE = 5
+            LENGTH_WEIGHT = 30
+            LENGTH_POWER = 2
             score = 0
             if parent in self.vocab:
-                score += 1
-            score += max(0, self.similarity(parent, word))
+                score += FREQ_WEIGHT * math.log(self.vocab[parent])
+            score += SIM_WEIGHT * SIM_BASE ** max(0, self.similarity(parent, word))
+            score += LEN_WEIGHT * LEN_BASE ** (float(len(parent)) / len(word))
+            score -= LENGTH_WEIGHT / max(1, len(parent)) ** LENGTH_POWER
             return score
         def chain(segs, tags):
             def getAffix(s, t):
