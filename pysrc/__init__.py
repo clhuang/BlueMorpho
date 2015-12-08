@@ -1,20 +1,56 @@
-from pysrc.fileio import *
-from pysrc.morphochain import *
-from pysrc.objective import *
+from pysrc import fileio, morphochain, objective
 import pprint
+import os
 
-with open('data/prefix_list.p', 'rb') as f:
-    en_prefixes = pickle.load(f)
-with open('data/suffix_list.p', 'rb') as f:
-    en_suffixes = pickle.load(f)
-with open('data/prefix_corr2.p', 'rb') as f:
-    en_prefixes_corr = pickle.load(f)
-with open('data/suffix_corr2.p', 'rb') as f:
-    en_suffixes_corr = pickle.load(f)
-en_affixes = (en_prefixes, en_suffixes)
-en_affix_corr = (en_prefixes_corr, en_suffixes_corr)
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
-with open('data/traincorpus.p', 'rb') as f:
-    en_trainsegmentations = pickle.load(f)
-with open('data/devcorpus.p', 'rb') as f:
-    en_devsegmentations = pickle.load(f)
+
+def get_prefixes_affixes(lang='eng'):
+    assert lang == 'eng' or lang == 'tur'
+
+    with open('data/%s_prefix_list.p' % lang, 'rb') as f:
+        prefixes = pickle.load(f)
+    with open('data/%s_suffix_list.p' % lang, 'rb') as f:
+        suffixes = pickle.load(f)
+    with open('data/%s_prefix_corr2.p' % lang, 'rb') as f:
+        prefixes_corr = pickle.load(f)
+    with open('data/%s_suffix_corr2.p' % lang, 'rb') as f:
+        suffixes_corr = pickle.load(f)
+    affixes = (prefixes, suffixes)
+    affix_corr = (prefixes_corr, suffixes_corr)
+    return affixes, affix_corr
+
+
+def get_segmentations(lang='eng'):
+    assert lang == 'eng' or lang == 'tur'
+
+    with open('data/%s_traincorpus.p' % lang, 'rb') as f:
+        trainsegmentations = pickle.load(f)
+    with open('data/%s_devcorpus.p' % lang, 'rb') as f:
+        devsegmentations = pickle.load(f)
+    return trainsegmentations, devsegmentations
+
+
+def get_wordlist(size='small', lang='eng'):
+    if size == 'full':
+        fname = 'data/wordlist-2010.%s.txt' % lang
+    else:
+        fname = 'data/wordlist-2010.%s.%s.txt' % (lang, size)
+    return fileio.read_wordcounts(fname)
+
+
+def get_wordvectors(size='small', lang='en'):
+    if lang == 'eng':
+        lang = 'en'
+    if lang == 'tur':
+        lang = 'tr'
+    if size == 'full':
+        size = 'filtered'
+    file_v = 'data/%s-wordvectors200_%s.txt' % (lang, size)
+    binfile_v = file_v[:-3] + 'bin'
+    if os.path.isfile(binfile_v):
+        return fileio.load_wordvectors(binfile_v, binary=True)
+    return fileio.load_wordvectors(file_v)
