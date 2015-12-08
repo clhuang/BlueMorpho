@@ -85,7 +85,7 @@ if __name__ == '__main__':
             with open('out_py/dictvectorizer.%s-%s.p' % (w_size,v_size), 'rb') as f:
                 en_kwargs['dictvectorizer'] = pickle.load(f)
             with open('out_py/weights.%s-%s.p' % (w_size,v_size), 'rb') as f:
-                en_kwargs['weights'] = pickle.load(f)
+                en_kwargs['weightvector'] = pickle.load(f)
             en_morpho = MorphoChain(*en_args, **en_kwargs)
         en_morpho.computeAccuracy(en_devsegmentations)
 
