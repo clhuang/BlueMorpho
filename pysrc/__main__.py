@@ -1,4 +1,4 @@
-from __init__ import *
+from pysrc import *
 import rlcompleter
 import readline
 import sys

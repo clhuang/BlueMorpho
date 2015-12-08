@@ -1,6 +1,6 @@
-from fileio import *
-from morphochain import *
-from objective import *
+from pysrc.fileio import *
+from pysrc.morphochain import *
+from pysrc.objective import *
 import pprint
 
 with open('data/prefix_list.p', 'rb') as f:

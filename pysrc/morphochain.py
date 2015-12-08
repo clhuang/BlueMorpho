@@ -8,7 +8,7 @@ import scipy.spatial.distance
 import sklearn.linear_model
 from sklearn.feature_extraction import DictVectorizer
 
-import accuracy
+import pysrc.accuracy
 
 ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype'])
