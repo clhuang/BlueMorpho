@@ -351,24 +351,38 @@ class MorphoChain(object):
         def chain(segs, tags):
             def getAffix(s, t):
                 return s if t[0] == '+' else t[:t.find('_')]
+            def suffix_type(s, t):
+                if t[0] == '+':
+                    return ParentType.SUFFIX
+                t = t[:t.find('_')]
+                if s == t:
+                    return ParentType.SUFFIX
+                elif len(s) == len(t):
+                    return ParentType.MODIFY
+                elif s[:-1] == t:
+                    return ParentType.REPEAT
+                else:
+                    return ParentType.DELETE
             if len(segs) <= 1:
-                return getAffix(segs[0], tags[0])
+                root = getAffix(segs[0], tags[0])
+                return [(root, ParentTransformation(root, ParentType.STOP))]
             word = ''.join(segs[:-1]) + getAffix(segs[-1], tags[-1])
             word = word.replace('~', '') # null segments
             parent_suf = ''.join(segs[:-2]) + getAffix(segs[-2], tags[-2])
             parent_suf = parent_suf.replace('~', '')
-            pre_parent = ''.join(segs[1:])
+            pre_parent = ''.join(segs[1:-1]) + getAffix(segs[-1], tags[-1])
             pre_parent = pre_parent.replace('~', '')
-            if segs[-1] == '~':
-                return [word] + chain(segs[:-1], tags[:-1])
-            elif tags[-1][0] == '+': # inflectional
-                return [word] + chain(segs[:-1], tags[:-1])
+            type_suf = suffix_type(segs[-2], tags[-2])
+            pre_pair = [(word, ParentTransformation(pre_parent, ParentType.PREFIX))]
+            pair_suf = [(word, ParentTransformation(parent_suf, type_suf))]
+            if tags[-1][0] == '+': # inflectional
+                return pair_suf + chain(segs[:-1], tags[:-1])
             score_suf = parentScore(parent_suf, word)
             pre_score = parentScore(pre_parent, word)
-            if pre_score < score_suf:
-                return [word] + chain(segs[1:], tags[1:])
+            if pre_score > score_suf:
+                return pre_pair + chain(segs[1:], tags[1:])
             else:
-                return [word] + chain(segs[:-1], tags[:-1])
+                return pair_suf + chain(segs[:-1], tags[:-1])
         d = {}
         for word, (g_segs, g_tags) in segmentations.iteritems():
             d[word] = []
