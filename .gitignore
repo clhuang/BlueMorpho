@@ -18,6 +18,7 @@
 *.out
 *.pre
 *.log
+*.pdf
 *.synctex.gz
 
 # Swap files
