@@ -39,7 +39,7 @@ class MorphoChain(object):
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
         self.weightvector = weightvector
         self.segmentations = segmentations
-        self.translations, self.invTranslations = translations
+        self.translations, self.invTranslations = translations or (None, None)
         self.secondLangChain = secondLangChain
 
     def setWeightVector(self, weightvector):
@@ -92,8 +92,8 @@ class MorphoChain(object):
                     # # FIX: this is currently storing only the last prefix into d['diff']
                     # d['diffpre_' + prefix] = cos_sim
             if affix in self.prefixNeighbours:
-                for n, score in self.prefixNeighbours[affix][:TOPNEIGHBOURS]:
-                    if parent + n in vocab:
+                for n, score in self.prefixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
+                    if parent + n in self.vocab:
                         d['neighbours_COR_S'] = affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
@@ -118,8 +118,8 @@ class MorphoChain(object):
                     # d['diffsuff_' + suffix ] = cos_sim
             # # affix correlation TODO check for each case
             if affix in self.suffixNeighbours:
-                for n, score in self.suffixNeighbours[affix][:TOPNEIGHBOURS]:
-                    if w[:lenparent - len(affix)] + n in vocab:
+                for n, score in self.suffixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
+                    if w[:lenparent - len(affix)] + n in self.vocab:
                         d['neighbours_COR_S'] = affix
          # parent is not in word list
         if z.parentword not in self.vocab:

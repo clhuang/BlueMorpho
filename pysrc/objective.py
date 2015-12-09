@@ -31,7 +31,7 @@ def output_decorate(func):
     return newf
 
 
-def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
+def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True, maxiter=MAX_ITERS):
     '''
     X is a feature matrix, where each row corresponds
     to a (w, z) pair, where the w's appear in order.
@@ -60,12 +60,12 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True):
         bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
         approx_grad=False,
         fprime=None,
-        maxiter=MAX_ITERS)[0]
+        maxiter=maxiter)[0]
 
 
 def optimize_weights_supervised(X, nzs, widsneighbors,
                                 Xsup, nzs_sup, cxs_sup,
-                                lamb=0, lamb2=1, output=True):
+                                lamb=0, lamb2=1, output=True, maxiter=MAX_ITERS):
     fus = get_optimizer_fn(X, nzs, widsneighbors, lamb)
     fsup = get_logprob_fn(Xsup, nzs_sup, cxs_sup)
     def fcomb(weights):
@@ -82,7 +82,7 @@ def optimize_weights_supervised(X, nzs, widsneighbors,
         bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
         approx_grad=False,
         fprime=None,
-        maxiter=MAX_ITERS)[0]
+        maxiter=maxiter)[0]
 
 
 def get_logprob_fn(X, nzs, cxs):

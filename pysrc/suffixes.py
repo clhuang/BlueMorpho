@@ -1,4 +1,4 @@
-import pysrc.fileio
+from pysrc import fileio
 from collections import Counter, defaultdict
 import math
 import numpy as np
@@ -80,39 +80,57 @@ def genAffixesListOpt(wordlist, wordvectors):
         prefixes[prefix] *= (1 + 0.3 * np.linalg.norm(prefixvector[prefix]))
     suff_list = [s[0] for s in suffixes.most_common(100)]
     pref_list = [p[0] for p in prefixes.most_common(100)]
-    print(suff_list)
-    print(pref_list)
+    return suff_list, pref_list
 
 
-def genAffixCorrelation(affixes, wordlist):
+def genAffixCorrelation(affixes, wordlist, fname='../data/prefix_corr3.p', suff=True):
     d = {}
     d2 = {}
     for affix in affixes:
         d[affix] = set()
         affixlen = len(affix)
         for word in wordlist:
-            if word[-affixlen:] == affix:
-                d[affix].add(word[:-affixlen])
+            word_affix = word[-affixlen:] if suff else word[:affixlen]
+            word_root = word[:-affixlen] if suff else word[affixlen:]
+            if word_affix == affix:
+                d[affix].add(word_root)
     for affix in affixes:
         d2[affix] = []
         for affix2 in affixes:
             if affix != affix2:
                 d2[affix].append((affix2, float(len(d[affix] & d[affix2])) / len(d[affix])))
         d2[affix].sort(key = lambda x: x[1])
-    pickle.dump(d2, open("../data/prefix_corr3.p", "wb"))
+    pickle.dump(d2, open(fname, 'wb'))
 
+entr = {'eng': 'en', 'tur': 'tr'}
 
-filename = '../data/wordlist-2010.eng.txt'
+lang  = 'tur'
+size = 'filtered'
 
-wordlist = fileio.read_wordcounts(filename)
+filename_w = 'data/wordlist-2010.%s%s.txt' % (lang, '' if size == 'filtered' else size)
+filename_v = 'data/%s-wordvectors200_%s.txt' % (entr[lang], size)
+wordlist = fileio.read_wordcounts(filename_w)
+wordvectors = fileio.load_wordvectors(filename_v)
+
+suffixes, prefixes = genAffixesListOpt(wordlist, wordvectors)
+with open('data/%s_suffix_list.p' % lang, 'wb') as f:
+    pickle.dump(suffixes, f)
+with open('data/%s_prefix_list.p' % lang, 'wb') as f:
+    pickle.dump(prefixes, f)
+genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr2.p'%lang, suff=True)
+genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr2.p'%lang, suff=False)
+
+# filename = '../data/wordlist-2010.eng.txt'
+
+# wordlist = fileio.read_wordcounts(filename)
 
 #wordvectors = fileio.load_wordvectors('data/vectors_filtered/en/vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
 # wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
-wordlist = fileio.read_wordcounts(filename)
+# wordlist = fileio.read_wordcounts(filename)
 #genAffixesListOpt(wordlist, wordvectors)
 #prefix_list = pickle.load(open('data/prefix_list.p', 'rb'))
 #suffix_list = pickle.load(open('data/suffix_list.p', 'rb'))
-suffixes = ['s', "'s", 'ing', 'ed', 'd', 'ly', "'", 'er', 'e', 'es', 'y', 'n', 'ers', 'ness', 'a', 'r', 'i', 'rs', 'o', 't', 'al', 'l', 'man', 'ally', 'ism', 'less', 'able', 'ist', 'en', 'ity', 'on', 'in', 'an', 'h', 'ns', 'ic', 'ment', 'ian', 'ings', 'ion', 'm', 'ie', 'g', 'ists', 'c', 'land', 'men', 'k', 'son', 'is', 'est', 'ful', 'ized', 'ville', 'ship', 'na', 'ting', 'ation', 'ish', 'le', 'ne', 'ies', 'u', 'ry', 'p', 'ia', 'as', 'line', 'ling', 'ments', 'ions', 'ier', 'b', 'like', 'f', 'or', 'ton', 'la', 'hip', 'ping', 'el', 'os', 'side', 'ted', 'us', 'x', 'ize', 'z', 'ter', 'ised', 'izing', 'st', 'ta', 'led', 'house', 'ni', 'ped', 'ee', 'to', 'way']
-prefixes = ['un', 're', 's', 'a', 'over', 'de', 'c', 'in', 'non', 'b', 'p', 't', 'dis', 'm', 'd', 'g', 'e', 'k', 'super', 'f', 'h', 'under', 'pre', 'mis', 'inter', 'out', 'i', 'n', 'r', 'w', 'mc', 'sub', 'l', 'o', 'co', 'micro', 'ma', 'la', 'bio', 'multi', 'im', 'be', 'al', 'en', 'v', 'j', 'euro', 'u', 'sa', 'air', 'tele', 'st', 'le', 'anti', 'up', 'sun', 'di', 'ca', 'to', 'mo', 'ba', 'sh', 'back', 'con', 'y', 'mid', 'ka', 'da', 'trans', 'ta', 'sea', 'se', 'bi', 'an', 'z', 'car', 'ro', 'sc', 'ha', 'pro', 'ar', 'na', 'mi', 'home', 'mar', 'fore', 'ra', 'the', 'mega', 'hand', 'pa', 'bar', 'su', 'ad', 'bo', 'mac', 'post', 'mini', 'ch', 'head']
-genAffixCorrelation(prefixes, wordlist)
+# suffixes = ['s', "'s", 'ing', 'ed', 'd', 'ly', "'", 'er', 'e', 'es', 'y', 'n', 'ers', 'ness', 'a', 'r', 'i', 'rs', 'o', 't', 'al', 'l', 'man', 'ally', 'ism', 'less', 'able', 'ist', 'en', 'ity', 'on', 'in', 'an', 'h', 'ns', 'ic', 'ment', 'ian', 'ings', 'ion', 'm', 'ie', 'g', 'ists', 'c', 'land', 'men', 'k', 'son', 'is', 'est', 'ful', 'ized', 'ville', 'ship', 'na', 'ting', 'ation', 'ish', 'le', 'ne', 'ies', 'u', 'ry', 'p', 'ia', 'as', 'line', 'ling', 'ments', 'ions', 'ier', 'b', 'like', 'f', 'or', 'ton', 'la', 'hip', 'ping', 'el', 'os', 'side', 'ted', 'us', 'x', 'ize', 'z', 'ter', 'ised', 'izing', 'st', 'ta', 'led', 'house', 'ni', 'ped', 'ee', 'to', 'way']
+# prefixes = ['un', 're', 's', 'a', 'over', 'de', 'c', 'in', 'non', 'b', 'p', 't', 'dis', 'm', 'd', 'g', 'e', 'k', 'super', 'f', 'h', 'under', 'pre', 'mis', 'inter', 'out', 'i', 'n', 'r', 'w', 'mc', 'sub', 'l', 'o', 'co', 'micro', 'ma', 'la', 'bio', 'multi', 'im', 'be', 'al', 'en', 'v', 'j', 'euro', 'u', 'sa', 'air', 'tele', 'st', 'le', 'anti', 'up', 'sun', 'di', 'ca', 'to', 'mo', 'ba', 'sh', 'back', 'con', 'y', 'mid', 'ka', 'da', 'trans', 'ta', 'sea', 'se', 'bi', 'an', 'z', 'car', 'ro', 'sc', 'ha', 'pro', 'ar', 'na', 'mi', 'home', 'mar', 'fore', 'ra', 'the', 'mega', 'hand', 'pa', 'bar', 'su', 'ad', 'bo', 'mac', 'post', 'mini', 'ch', 'head']
+# genAffixCorrelation(prefixes, wordlist)

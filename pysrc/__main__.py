@@ -32,16 +32,17 @@ if __name__ == '__main__':
     parser.add_argument('--now', action='store_true')
     parser.add_argument('--vocab', choices=['small', 'med', 'large', 'full'], default='small')
     parser.add_argument('--vectors', choices=['small', 'med', 'large', 'full'], default='small')
-    parser.add_argument('--lang', choices=['eng', 'tur'], default='eng')
+    parser.add_argument('--lang', choices=['eng', 'tur', 'both'], default='eng')
     parser.add_argument('--supervised', type=float, default=0.0)
+    parser.add_argument('--maxiter', type=int, default=500)
     args = parser.parse_args()
 
     if sys.version_info >= (3, 0):
         raw_input = input  # ghettooooooooo
 
     trainsegmentations, devsegmentations = get_segmentations(args.lang)
-    mc_args = (get_wordvectors(args.vectors, args.lang), get_wordlist(args.vocab, args.lang),
-               *get_prefixes_affixes(args.lang))
+    mc_args = (get_wordvectors(args.vectors, args.lang), get_wordlist(args.vocab, args.lang)) + \
+            get_prefixes_affixes(args.lang)
     mc_kwargs = {'segmentations': trainsegmentations}
 
     if args.command == 'optimize':
@@ -50,21 +51,21 @@ if __name__ == '__main__':
         train = morpho.genTrainingData()
         with open('out_py/dictvectorizer.p', 'wb') as f:
             pickle.dump(morpho.dictvectorizer, f)
-        with open('out_py/dictvectorizer.%s-%s.p' % (args.vocab, args.vectors), 'wb') as f:
+        with open('out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'wb') as f:
             pickle.dump(morpho.dictvectorizer, f)
         if args.supervised:
             sups = morpho.genGoldsegTrainingData()
             print('training data saved, optimizing weights')
-            weights = objective.optimize_weights_supervised(*(train + sups), lamb2=args.supervised)
+            weights = objective.optimize_weights_supervised(*(train + sups), lamb2=args.supervised, maxiter=args.maxiter)
             morpho.setWeightVector(weights)
-            with open('out_py/weights.supervised%s.%s-%s.p' %
-                      (args.supervised, args.vocab, args.vectors), 'wb') as f:
+            with open('out_py/weights.%s.supervised%s.%s-%s.p' %
+                      (args.lang, args.supervised, args.vocab, args.vectors), 'wb') as f:
                 pickle.dump(weights, f)
         else:
             print('training data saved, optimizing supervised weights')
-            weights = objective.optimize_weights(*train)
+            weights = objective.optimize_weights(*train, maxiter=args.maxiter)
             morpho.setWeightVector(weights)
-            with open('out_py/weights.%s-%s.p' % (args.vocab, args.vectors), 'wb') as f:
+            with open('out_py/weights.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'wb') as f:
                 pickle.dump(weights, f)
 
     elif args.command == 'load' or args.command == 'run':
@@ -78,13 +79,18 @@ if __name__ == '__main__':
             morpho = MorphoChain(*mc_args, **mc_kwargs)
             loadweights()
         else:
-            with open('out_py/dictvectorizer.%s-%s.p' % (args.vocab, args.vectors), 'rb') as f:
+            with open('out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'rb') as f:
                 mc_kwargs['dictvectorizer'] = pickle.load(f)
-            with open('out_py/weights%s.%s-%s.p' % ('.supervised%s' % args.supervised
+            with open('out_py/weights.%s%s.%s-%s.p' % (args.lang, '.supervised%s' % args.supervised
                                                     if args.supervised else '', args.vocab, args.vectors), 'rb') as f:
                 mc_kwargs['weightvector'] = pickle.load(f)
             morpho = MorphoChain(*mc_args, **mc_kwargs)
 
+    if not args.now:
+        stdout = sys.stdout
+        with open('out_py/results.%s.%s-%s.txt' % (args.lang, args.vocab, args.vectors), 'wb') as sys.stdout:
+            morpho.computeAccuracy(devsegmentations)
+        sys.stdout = stdout
     morpho.computeAccuracy(devsegmentations)
 
     if args.command == 'run':
