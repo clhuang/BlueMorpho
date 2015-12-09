@@ -80,5 +80,7 @@ def read_dictionary(filename):
     return eng_to_tur, tur_to_eng
 
 
-# readCorpus('data/goldstd_trainset.segmentation.eng.txt', 'data/traincorpus.p')
-# readCorpus('data/goldstd_develset.segmentation.eng.txt', 'data/devcorpus.p')
+if __name__=="__main__":
+    for lang in ('eng', 'tur'):
+        readCorpus('data/goldstd_trainset.segmentation.%s.txt' % lang, 'data/%s_traincorpus.p' % lang)
+        readCorpus('data/goldstd_develset.segmentation.%s.txt' % lang, 'data/%s_devcorpus.p' % lang)
