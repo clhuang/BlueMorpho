@@ -5,6 +5,10 @@ except:
     import pickle
 
 
+def seg_points(segs):
+    return set(np.cumsum([len(i) for i in segs])[:-1])
+
+
 def score(gold_segs_list, predictions_segs_list):
     correct = 0
     goldTotal = 0
@@ -16,12 +20,12 @@ def score(gold_segs_list, predictions_segs_list):
         if word not in gold_segs_list:
             print('Error: %s' % word)
             continue
-        predTotal += len(pred_segs)
+        predTotal += len(pred_segs) - 1
         bestc = 0
         bestg = 0
         for gold_segs in gold_segs_list[word][0]:
-            gset = set(i for i in gold_segs if i != '~')
-            pset = set(pred_segs)
+            gset = seg_points(gold_segs)
+            pset = seg_points(pred_segs)
             num_correct_segs = len(gset & pset)
             num_gold_segs = len(gold_segs)
             if (bestc < num_correct_segs) or (bestc == num_correct_segs
@@ -37,5 +41,6 @@ def score(gold_segs_list, predictions_segs_list):
         correct += bestc
     precision = float(correct) / predTotal
     recall = float(correct) / goldTotal
-    print('Precision: %s\nRecall: %s' % (precision, recall))
-    return precision, recall
+    f1 = 2 * precision * recall / (precision + recall)
+    print('Precision: %s\nRecall: %s\nF1: %s' % (precision, recall, f1))
+    return precision, recall, f1
