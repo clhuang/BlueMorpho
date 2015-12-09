@@ -1,0 +1,4 @@
+eng supervised(5.0) large-large
+Precision: 0.863337713535
+Recall: 0.530266343826
+F1: 0.657

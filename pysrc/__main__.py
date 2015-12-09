@@ -36,6 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--supervised', type=float, default=0.0)
     parser.add_argument('--maxiter', type=int, default=500)
     parser.add_argument('--recalc', action='store_true')
+    parser.add_argument('--lamb', type=float, default=0.0)
     args = parser.parse_args()
 
     if sys.version_info >= (3, 0):
@@ -48,7 +49,6 @@ if __name__ == '__main__':
 
     if args.command == 'optimize':
         morpho = MorphoChain(*mc_args, **mc_kwargs)
-        print('generating training data')
         train_file = 'out_py/%s-train.%s-%s.p' % (args.lang, args.vocab, args.vectors)
         dictvec_file = 'out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors)
         try:
@@ -59,6 +59,7 @@ if __name__ == '__main__':
             with open(train_file, 'rb') as f:
                 train = pickle.load(f)
         except:
+            print('generating training data')
             train = morpho.genTrainingData()
             with open(train_file, 'wb') as f:
                 pickle.dump(train, f, pickle.HIGHEST_PROTOCOL)
@@ -68,15 +69,15 @@ if __name__ == '__main__':
             pickle.dump(morpho.dictvectorizer, f)
         if args.supervised:
             sups = morpho.genGoldsegTrainingData()
-            print('training data saved, optimizing weights')
-            weights = objective.optimize_weights_supervised(*(train + sups), lamb2=args.supervised, maxiter=args.maxiter)
+            print('training data acquired, optimizing weights')
+            weights = objective.optimize_weights_supervised(*(train + sups), lamb=args.lamb, lamb2=args.supervised, maxiter=args.maxiter)
             morpho.setWeightVector(weights)
             with open('out_py/weights.%s.supervised%s.%s-%s.p' %
                       (args.lang, args.supervised, args.vocab, args.vectors), 'wb') as f:
                 pickle.dump(weights, f)
         else:
-            print('training data saved, optimizing supervised weights')
-            weights = objective.optimize_weights(*train, maxiter=args.maxiter)
+            print('training data acquired, optimizing supervised weights')
+            weights = objective.optimize_weights(*train, lamb=args.lamb, maxiter=args.maxiter)
             morpho.setWeightVector(weights)
             with open('out_py/weights.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'wb') as f:
                 pickle.dump(weights, f)

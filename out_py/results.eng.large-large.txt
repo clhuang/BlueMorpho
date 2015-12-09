@@ -1,0 +1,4 @@
+eng large-large
+Precision: 0.78640776699
+Recall: 0.425569176883
+F1: 0.552272727273

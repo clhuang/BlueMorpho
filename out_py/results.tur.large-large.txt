@@ -1,0 +1,4 @@
+tur large-large
+Precision: 0.779069767442
+Recall: 0.355626326964
+F1: 0.48833819242

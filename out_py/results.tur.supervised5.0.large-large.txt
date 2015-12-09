@@ -1,0 +1,4 @@
+tur supervised(5.0) large-large
+Precision: 0.774111675127
+Recall: 0.48644338118
+F1: 0.597453476983

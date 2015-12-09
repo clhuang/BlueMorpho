@@ -1,0 +1,4 @@
+eng supervised(2.0) small-small
+Precision: 0.786445012788
+Recall: 0.515075376884
+F1: 0.622469635628

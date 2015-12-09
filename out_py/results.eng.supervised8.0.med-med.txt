@@ -1,0 +1,4 @@
+eng supervised(8.0) med-med
+Precision: 0.851282051282
+Recall: 0.5346215781
+F1: 0.656775469832
