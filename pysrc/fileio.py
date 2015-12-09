@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
 from gensim.models.word2vec import Word2Vec
 from collections import Counter, defaultdict
 import re
@@ -59,13 +58,9 @@ def read_words(filename):
 
 
 ROMAN_TT = {ord(c): ord(t) for c, t in zip('öüçýiþðâ', 'OUCiISGA')}
-def romanize_turkish(s):
-    return s.lower().translate(ROMAN_TT)
-
-
 def read_dictionary(filename):
-    eng_to_tur = defaultdict(lambda: [])
-    tur_to_eng = defaultdict(lambda: [])
+    eng_to_tur = defaultdict(list)
+    tur_to_eng = defaultdict(list)
 
     WWDR = re.compile(r'^([^ ]+)\t([^ ]+)\t')
     with codecs.open(filename, 'r', 'latin-1') as f:
@@ -74,7 +69,7 @@ def read_dictionary(filename):
             if match:
                 eng, tur = match.groups()
                 eng = eng.lower()
-                tur = romanize_turkish(tur)
+                tur = tur.lower().translate(ROMAN_TT)
                 eng_to_tur[eng].append(tur)
                 tur_to_eng[tur].append(eng)
     return eng_to_tur, tur_to_eng

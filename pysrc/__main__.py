@@ -37,6 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('--maxiter', type=int, default=500)
     parser.add_argument('--recalc', action='store_true')
     parser.add_argument('--lamb', type=float, default=0.0)
+    parser.add_argument('--twolang', action='store_true')
     args = parser.parse_args()
 
     if sys.version_info >= (3, 0):
@@ -47,8 +48,16 @@ if __name__ == '__main__':
             get_prefixes_affixes(args.lang)
     mc_kwargs = {'segmentations': trainsegmentations}
 
+    MCCls = MorphoChain
+    if args.twolang:
+        MCCls = duolingo.TwoLangMorphoChain
+        with open('out_py/eWordToEParents.p') as f:
+            eWordToEparents = pickle.load(f)
+            mc_args.append(eWordToEParents)
+
+
     if args.command == 'optimize':
-        morpho = MorphoChain(*mc_args, **mc_kwargs)
+        morpho = MCCls(*mc_args, **mc_kwargs)
         train_file = 'out_py/%s-train.%s-%s.p' % (args.lang, args.vocab, args.vectors)
         dictvec_file = 'out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors)
         try:
@@ -90,7 +99,7 @@ if __name__ == '__main__':
         if args.now:
             with open('out_py/dictvectorizer.p', 'rb') as f:
                 mc_kwargs['dictvectorizer'] = pickle.load(f)
-            morpho = MorphoChain(*mc_args, **mc_kwargs)
+            morpho = MCCls(*mc_args, **mc_kwargs)
             loadweights()
         else:
             with open('out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'rb') as f:
@@ -98,7 +107,7 @@ if __name__ == '__main__':
             with open('out_py/weights.%s%s.%s-%s.p' % (args.lang, '.supervised%s' % args.supervised
                                                     if args.supervised else '', args.vocab, args.vectors), 'rb') as f:
                 mc_kwargs['weightvector'] = pickle.load(f)
-            morpho = MorphoChain(*mc_args, **mc_kwargs)
+            morpho = MCCls(*mc_args, **mc_kwargs)
 
     if not args.now:
         stdout = sys.stdout
