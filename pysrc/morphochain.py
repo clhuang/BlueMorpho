@@ -11,7 +11,7 @@ from sklearn.feature_extraction import DictVectorizer
 from pysrc import accuracy
 
 ParentTransformation = namedtuple('ParentTransformation',
-                                  ['parentword', 'transformtype'])
+                                  ['parentword', 'transformtype', 'olangconfidence'])
 
 
 class ParentType():
@@ -21,13 +21,15 @@ class ParentType():
     MODIFY = 'MODIFY'
     DELETE = 'DELETE'
     REPEAT = 'REPEAT'
+    OLANG = 'OLANG'
     TOPNEIGHBOURS = 7
 
 
 class MorphoChain(object):
     def __init__(self, wordvectors, vocab, affixes, affixNeighbours, dictionary=None,
                  alphabet=string.ascii_lowercase, dictvectorizer=None,
-                 weightvector=None, segmentations=None):
+                 weightvector=None, segmentations=None, translations=None,
+                 secondLangChain=None):
         self.wordvectors = wordvectors
         self.vocab = vocab
         self.dictionary = dictionary
@@ -37,6 +39,8 @@ class MorphoChain(object):
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
         self.weightvector = weightvector
         self.segmentations = segmentations
+        self.translations, self.invTranslations = translations
+        self.secondLangChain = secondLangChain
 
     def setWeightVector(self, weightvector):
         self.weightvector = weightvector
@@ -48,7 +52,7 @@ class MorphoChain(object):
         parentsAndFeatures = {}
         for z in self.genCandidates(w):
             parentsAndFeatures[z] = self.getFeatures(w, z)
-        z = ParentTransformation(w, ParentType.STOP)
+        z = ParentTransformation(w, ParentType.STOP, None)
         parentsAndFeatures[z] = self.getFeatures(
             w, z, max([d['cos'] for d in parentsAndFeatures.values()] or [0]))
         return parentsAndFeatures
@@ -135,10 +139,10 @@ class MorphoChain(object):
         for x in range(len(word) // 2, len(word)):
             parent = word[:x]
             if parent:
-                candidates.append(ParentTransformation(parent, ParentType.SUFFIX))
+                candidates.append(ParentTransformation(parent, ParentType.SUFFIX, None))
             #planning - plan - (n)ing
             if x > 0 and word[x] == word[x - 1]:
-                candidates.append(ParentTransformation(parent, ParentType.REPEAT))
+                candidates.append(ParentTransformation(parent, ParentType.REPEAT, None))
             if parent and parent[-1] in self.alphabet:
                 for l in self.alphabet:
                     if l != parent[-1]:
@@ -146,17 +150,17 @@ class MorphoChain(object):
                         newParent = parent[:-1] + l
                         SIM_THRESH = 0.2
                         if newParent in self.vocab and self.similarity(word, newParent) > SIM_THRESH:
-                            candidates.append(ParentTransformation(newParent, ParentType.MODIFY))
+                            candidates.append(ParentTransformation(newParent, ParentType.MODIFY, None))
             # libraries - librar(y) -ies ?? (Delete)
             if len(parent) < len(word) - 1 and word[x:] in self.suffixes:
                 for l in self.alphabet:
                     newParent = parent + l
                     SIM_THRESH = 0
                     if newParent in self.vocab and self.similarity(word, newParent) > SIM_THRESH:
-                        candidates.append(ParentTransformation(newParent, ParentType.DELETE))
+                        candidates.append(ParentTransformation(newParent, ParentType.DELETE, None))
         for x in range(1, (len(word) + 2) // 2):
             parent = word[x:]
-            candidates.append(ParentTransformation(parent, ParentType.PREFIX))
+            candidates.append(ParentTransformation(parent, ParentType.PREFIX, None))
         # Stopping condition handled in getParentsAndFeatures
         # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
@@ -373,7 +377,7 @@ class MorphoChain(object):
                     return ParentType.DELETE
             if len(segs) <= 1:
                 root = getAffix(segs[0], tags[0])
-                return [(root, ParentTransformation(root, ParentType.STOP))]
+                return [(root, ParentTransformation(root, ParentType.STOP, None))]
             word = ''.join(segs[:-1]) + getAffix(segs[-1], tags[-1])
             word = word.replace('~', '') # null segments
             parent_suf = ''.join(segs[:-2]) + getAffix(segs[-2], tags[-2])
@@ -381,8 +385,8 @@ class MorphoChain(object):
             pre_parent = ''.join(segs[1:-1]) + getAffix(segs[-1], tags[-1])
             pre_parent = pre_parent.replace('~', '')
             type_suf = suffix_type(segs[-2], tags[-2])
-            pre_pair = [(word, ParentTransformation(pre_parent, ParentType.PREFIX))]
-            pair_suf = [(word, ParentTransformation(parent_suf, type_suf))]
+            pre_pair = [(word, ParentTransformation(pre_parent, ParentType.PREFIX, None))]
+            pair_suf = [(word, ParentTransformation(parent_suf, type_suf, None))]
             if tags[-1][0] == '+': # inflectional
                 return pair_suf + chain(segs[:-1], tags[:-1])
             score_suf = parentScore(parent_suf, word)
