@@ -4,7 +4,7 @@ import editdistance
 
 
 class TwoLangMorphoChain(MorphoChain):
-    def __init__(self, wordvectors, vocab, affixes, affixNeighbours, translations,
+    def __init__(self, wordvectors, vocab, affixes, affixNeighbours, eWordToEngParents,
                  dictionary=None,
                  alphabet=string.ascii_lowercase, dictvectorizer=None,
                  weightvector=None, segmentations=None,
@@ -12,10 +12,9 @@ class TwoLangMorphoChain(MorphoChain):
         super(TwoLangMorphoChain, self).__init__(
             wordvectors, vocab, affixes, affixNeighbours, dictionary,
             alphabet, dictvectorizer, weightvector,
-            segmentations, translations)
-        self.translations, self.invTranslations = translations
+            segmentations)
         self.secondLangChain = secondLangChain
-        self.init2LangCache()
+        self.eWordToEngParents = eWordToEngParents
 
     def parentHeuristic(word, parent):
         dist = editdistance.eval(word, parent)
