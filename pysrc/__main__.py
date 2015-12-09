@@ -1,4 +1,5 @@
 from pysrc import *
+import pysrc.duolingo as duolingo
 from pysrc.morphochain import MorphoChain
 import rlcompleter
 import readline
@@ -49,17 +50,22 @@ if __name__ == '__main__':
     mc_kwargs = {'segmentations': trainsegmentations}
 
     MCCls = MorphoChain
+    filesuffix = '.%s.%s-%s' % (args.lang, args.vocab, args.vectors)
+    ofilesuffix = filesuffix if not args.supervised else \
+        '.%s.supervised%s.%s-%s' % (args.lang, args.supervised, args.vocab, args.vectors)
+
     if args.twolang:
         MCCls = duolingo.TwoLangMorphoChain
         with open('out_py/eWordToEParents.p') as f:
             eWordToEparents = pickle.load(f)
             mc_args.append(eWordToEParents)
-
+        filesuffix = '.twolang' + filesuffix
+        ofilesuffix = '.twolang' + ofilesuffix
 
     if args.command == 'optimize':
         morpho = MCCls(*mc_args, **mc_kwargs)
         train_file = 'out_py/%s-train.%s-%s.p' % (args.lang, args.vocab, args.vectors)
-        dictvec_file = 'out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors)
+        dictvec_file = 'out_py/dictvectorizer%s.p' % filesuffix
         try:
             if args.recalc:
                 raise
@@ -81,15 +87,12 @@ if __name__ == '__main__':
             print('training data acquired, optimizing weights')
             weights = objective.optimize_weights_supervised(*(train + sups), lamb=args.lamb, lamb2=args.supervised, maxiter=args.maxiter)
             morpho.setWeightVector(weights)
-            with open('out_py/weights.%s.supervised%s.%s-%s.p' %
-                      (args.lang, args.supervised, args.vocab, args.vectors), 'wb') as f:
-                pickle.dump(weights, f)
         else:
             print('training data acquired, optimizing supervised weights')
             weights = objective.optimize_weights(*train, lamb=args.lamb, maxiter=args.maxiter)
             morpho.setWeightVector(weights)
-            with open('out_py/weights.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'wb') as f:
-                pickle.dump(weights, f)
+        with open('out_py/weights%s.p' % ofilesuffix, 'wb') as f:
+            pickle.dump(weights, f)
 
     elif args.command == 'load' or args.command == 'run':
         def loadweights():
@@ -102,17 +105,15 @@ if __name__ == '__main__':
             morpho = MCCls(*mc_args, **mc_kwargs)
             loadweights()
         else:
-            with open('out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'rb') as f:
+            with open('out_py/dictvectorizer%s.p' % filesuffix, 'rb') as f:
                 mc_kwargs['dictvectorizer'] = pickle.load(f)
-            with open('out_py/weights.%s%s.%s-%s.p' % (args.lang, '.supervised%s' % args.supervised
-                                                    if args.supervised else '', args.vocab, args.vectors), 'rb') as f:
+            with open('out_py/weights%s.p' % ofilesuffix, 'rb') as f:
                 mc_kwargs['weightvector'] = pickle.load(f)
             morpho = MCCls(*mc_args, **mc_kwargs)
 
     if not args.now:
         stdout = sys.stdout
-        with open('out_py/results.%s%s.%s-%s.txt' % (args.lang, '.supervised%s' % args.supervised
-                  if args.supervised else '', args.vocab, args.vectors), 'w') as sys.stdout:
+        with open('out_py/results%s.txt' % ofilesuffix, 'w') as sys.stdout:
             print('%s%s %s-%s' % (args.lang, ' supervised(%s)' % args.supervised if args.supervised else '',
                                   args.vocab, args.vectors))
             morpho.computeAccuracy(devsegmentations)
