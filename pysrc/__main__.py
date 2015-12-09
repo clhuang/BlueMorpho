@@ -126,9 +126,9 @@ if __name__ == '__main__':
         word = raw_input("Enter word: ")
         while True:
             if word == 'ACCURACY_TRAIN':
-                morpho.computeAccuracy()
+                morpho.computeAccuracy(verbose=True)
             elif word =='ACCURACY_DEVEL':
-                morpho.computeAccuracy(devsegmentations)
+                morpho.computeAccuracy(devsegmentations, True)
             elif word == 'RELOAD' and args.now:
                 loadweights()
             elif word == 'EXIT':
