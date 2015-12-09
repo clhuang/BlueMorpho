@@ -77,7 +77,10 @@ class MorphoChain(object):
         parent = z.parentword
         lenparent = len(z.parentword)
         # affix
-        if z.transformtype == ParentType.PREFIX:
+        if z.transformtype == ParentType.OLANG:
+            pass  # features for OLANG will be in duolingo, this is just to prevent
+                  # base features from messing up
+        elif z.transformtype == ParentType.PREFIX:
             affix = w[:-lenparent]
             # list of prefixes  #TODO: Maxlength of suffix is a param??
             if len(affix) > MAX_PREF_LEN or affix not in self.prefixes:
@@ -167,8 +170,9 @@ class MorphoChain(object):
     def genNeighbors(self, w, k=5):
         k = min(k, (len(w)) // 2)
         ne = set([w])
+
         def swap(word, i):
-            return word[:i] + word[i+1] + word[i] + word[i+2:]
+            return word[:i] + word[i + 1] + word[i] + word[i + 2:]
         for i in range(k):
             ne.add(swap(w, i))
         for i in range(len(w) - k - 1, len(w) - 1):

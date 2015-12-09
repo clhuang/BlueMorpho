@@ -2,6 +2,7 @@ from morphochain import MorphoChain, ParentTransformation, ParentType
 import string
 import editdistance
 
+
 class TwoLangMorphoChain(MorphoChain):
     def __init__(self, wordvectors, vocab, affixes, affixNeighbours, translations,
                  dictionary=None,
@@ -58,5 +59,14 @@ class TwoLangMorphoChain(MorphoChain):
 
         return list(canddict.values())
 
-
-
+    def getFeatures(self, w, z, maxCosSimilarity=None):
+        d = super(TwoLangMorphoChain, self).getFeatures(w, z, maxCosSimilarity)
+        if z.olangconfidence is not None:
+            d['olangconfidence'] = z.olangconfidence
+        else:
+            d['no_translated_parents'] = 1
+        if z.transformtype != ParentType.OLANG and z.olangconfidence is not None:
+            d['repeat'] = z.olangconfidence
+        else:
+            d['no_repeat'] = 1
+        return d
