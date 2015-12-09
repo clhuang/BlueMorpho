@@ -102,7 +102,7 @@ if __name__ == '__main__':
     if not args.now:
         stdout = sys.stdout
         with open('out_py/results.%s%s.%s-%s.txt' % (args.lang, '.supervised%s' % args.supervised
-                  if args.supervised else '', args.vocab, args.vectors), 'wb') as sys.stdout:
+                  if args.supervised else '', args.vocab, args.vectors), 'w') as sys.stdout:
             print('%s%s %s-%s' % (args.lang, ' supervised(%s)' % args.supervised if args.supervised else '',
                                   args.vocab, args.vectors))
             morpho.computeAccuracy(devsegmentations)

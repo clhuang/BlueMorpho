@@ -28,7 +28,7 @@ class ParentType():
 class MorphoChain(object):
     def __init__(self, wordvectors, vocab, affixes, affixNeighbours, dictionary=None,
                  alphabet=string.ascii_lowercase, dictvectorizer=None,
-                 weightvector=None, segmentations=None, translations=None,
+                 weightvector=None, segmentations=None,
                  secondLangChain=None):
         self.wordvectors = wordvectors
         self.vocab = vocab
@@ -39,7 +39,6 @@ class MorphoChain(object):
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
         self.weightvector = weightvector
         self.segmentations = segmentations
-        self.translations, self.invTranslations = translations or (None, None)
         self.secondLangChain = secondLangChain
 
     def setWeightVector(self, weightvector):
