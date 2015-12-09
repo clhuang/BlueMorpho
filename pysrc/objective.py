@@ -86,44 +86,36 @@ def optimize_weights_supervised(X, nzs, widsneighbors,
 
 
 def get_logprob_fn(X, nzs, cxs):
-
-    Xdense = X.toarray()
-
-    idx = 0
-    idxs = []
-    for nz in nzs:
-        idxs.append((idx, idx+nz))
-        idx += nz
+    wordbounds = np.cumsum(nzs)
 
     nexamples, nfeatures = X.shape
-    bins = np.digitize(np.arange(nexamples), np.array(idxs)[:, 1])
+    bins = np.digitize(np.arange(nexamples), wordbounds)
+    Gcoo = X.tocoo()
+    wordbins = bins[Gcoo.row]
+    ics = np.bincount(cxs, minlength=nexamples)[Gcoo.row]
 
     def f(weights):
         Xp = X.dot(weights).flatten()
         Xpexp = np.exp(Xp)
         normcs = np.bincount(bins, Xpexp, minlength=len(nzs))
         logprobs = Xp[cxs] - np.log(normcs)
-        grad = Xdense[cxs].sum(0)
-        for i, (a, b) in enumerate(idxs):
-            # check that this is what you want to do
-            grad -= np.dot(Xpexp[a:b].reshape(1,-1), Xdense[a:b]).flatten() / normcs[i]
+
+        data = Gcoo.data * (ics - Xpexp[Gcoo.row] / normcs[wordbins])
+        grad = np.bincount(Gcoo.col, data, minlength=nfeatures)
+
         return -logprobs.sum(), -grad  # want to maximize
 
     return f
 
 def get_optimizer_fn(X, nzs, widsneighbors, lamb=0):
-    idx = 0
-    idxs = []  # starting, ending indices for each word/neighbor
-    for nz in nzs:
-        idxs.append((idx, idx+nz))
-        idx += nz
+    wordbounds = np.cumsum(nzs)
 
     Gcoo = X.tocoo()
     orow = Gcoo.row
-    nrow = np.digitize(orow, np.array(idxs)[:, 1])
+    nrow = np.digitize(orow, wordbounds)
     nexamples, nfeatures = X.shape
 
-    arow = np.digitize(np.arange(nexamples), np.array(idxs)[:, 1])
+    arow = np.digitize(np.arange(nexamples), wordbounds)
 
     fnbridx = np.zeros_like(nzs, dtype=int)
     for i, (widx, nbrs) in enumerate(widsneighbors):
@@ -134,9 +126,8 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0):
     def f(weights):
         stime = time.time()
         Xp = np.exp(X.dot(weights)).flatten()  # e^{\theta*\phi(w, z)}
-        F = np.bincount(arow, Xp, minlength=len(idxs))
+        F = np.bincount(arow, Xp, minlength=len(nzs))
 
-        fn = np.zeros_like(F)
         fnbrssum = np.bincount(fnbridx, F, minlength=len(widx)+1)
 
         fv = np.log(F[widx]).sum() - np.log(fnbrssum)[:-1].sum()
@@ -146,7 +137,7 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0):
         data = Gcoo.data * Xp[orow] * fn[nrow]
         gv = np.bincount(Gcoo.col, data, minlength=nfeatures)
 
-        fv -= lamb * numpy.linalg.norm(weights)**2
+        fv -= lamb * weights.dot(weights)
         gv -= 2 * lamb * weights
         # return negative because we want to actually maximize
         return -fv, -gv
