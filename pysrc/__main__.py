@@ -35,6 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--lang', choices=['eng', 'tur', 'both'], default='eng')
     parser.add_argument('--supervised', type=float, default=0.0)
     parser.add_argument('--maxiter', type=int, default=500)
+    parser.add_argument('--recalc', action='store_true')
     args = parser.parse_args()
 
     if sys.version_info >= (3, 0):
@@ -48,10 +49,22 @@ if __name__ == '__main__':
     if args.command == 'optimize':
         morpho = MorphoChain(*mc_args, **mc_kwargs)
         print('generating training data')
-        train = morpho.genTrainingData()
+        train_file = 'out_py/%s-train.%s-%s.p' % (args.lang, args.vocab, args.vectors)
+        dictvec_file = 'out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors)
+        try:
+            if args.recalc:
+                raise
+            with open(dictvec_file, 'rb') as f:
+                morpho.dictvectorizer = pickle.load(f)
+            with open(train_file, 'rb') as f:
+                train = pickle.load(f)
+        except:
+            train = morpho.genTrainingData()
+            with open(train_file, 'wb') as f:
+                pickle.dump(train, f, pickle.HIGHEST_PROTOCOL)
+            with open(dictvec_file, 'wb') as f:
+                pickle.dump(morpho.dictvectorizer, f)
         with open('out_py/dictvectorizer.p', 'wb') as f:
-            pickle.dump(morpho.dictvectorizer, f)
-        with open('out_py/dictvectorizer.%s.%s-%s.p' % (args.lang, args.vocab, args.vectors), 'wb') as f:
             pickle.dump(morpho.dictvectorizer, f)
         if args.supervised:
             sups = morpho.genGoldsegTrainingData()

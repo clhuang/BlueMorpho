@@ -35,7 +35,7 @@ class MorphoChain(object):
         self.dictionary = dictionary
         self.prefixes, self.suffixes = affixes
         self.alphabet = alphabet
-        self.dictvectorizer = dictvectorizer
+        self.dictvectorizer = dictvectorizer or DictVectorizer()
         self.prefixNeighbours, self.suffixNeighbours = affixNeighbours
         self.weightvector = weightvector
         self.segmentations = segmentations
