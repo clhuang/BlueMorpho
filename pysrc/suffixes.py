@@ -100,37 +100,60 @@ def genAffixCorrelation(affixes, wordlist, fname='../data/prefix_corr3.p', suff=
             if affix != affix2:
                 d2[affix].append((affix2, float(len(d[affix] & d[affix2])) / len(d[affix])))
         d2[affix].sort(key = lambda x: x[1])
-    pickle.dump(d2, open(fname, 'wb'))
+    with open(fname, 'wb') as f:
+        pickle.dump(d2, f)
+
+def genGoldAffix(goldSegsList):
+    prefixes = Counter()
+    suffixes = Counter()
+    for word, goldSegs in goldSegsList.items():
+        for q, goldSeg in zip(*goldSegs):
+            for thing, seg in zip(q, goldSeg):
+                tags = seg.split('_')
+                if len(tags) < 2:
+                    suffixes[thing] += 1
+                elif tags[1] == 's':
+                    suffixes[tags[0]] += 1
+                elif tags[1] == 'p':
+                    prefixes[tags[0]] += 1
+    prefixes = [p[0] for p in prefixes.most_common()]
+    suffixes = [s[0] for s in suffixes.most_common()]
+    return prefixes, suffixes
+
+
+
 
 entr = {'eng': 'en', 'tur': 'tr'}
 
-lang  = 'tur'
+lang  = 'eng'
 size = 'filtered'
 
 filename_w = 'data/wordlist-2010.%s%s.txt' % (lang, '' if size == 'filtered' else size)
-filename_v = 'data/%s-wordvectors200_%s.txt' % (entr[lang], size)
+filename_v = 'data/%s-wordvectors200_%s.bin' % (entr[lang], size)
 wordlist = fileio.read_wordcounts(filename_w)
-wordvectors = fileio.load_wordvectors(filename_v)
+#wordvectors = fileio.load_wordvectors(filename_v, binary=True)
 
-suffixes, prefixes = genAffixesListOpt(wordlist, wordvectors)
-with open('data/%s_suffix_list.p' % lang, 'wb') as f:
-    pickle.dump(suffixes, f)
-with open('data/%s_prefix_list.p' % lang, 'wb') as f:
-    pickle.dump(prefixes, f)
-genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr2.p'%lang, suff=True)
-genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr2.p'%lang, suff=False)
+#suffixes, prefixes = genAffixesListOpt(wordlist, wordvectors)
+#with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    #pickle.dump(suffixes, f)
+#with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    #pickle.dump(prefixes, f)
+#genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)
+#genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr_gold.p'%lang, suff=False)
+#filename = 'data/goldstd_trainset.segmentation.eng.txt'
+#corpus = fileio.readCorpus(filename)
+#prefixes, suffixes = genGoldAffix(corpus)
+#print prefixes
+#print suffixes
+#with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    #pickle.dump(suffixes, f)
+#with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    #pickle.dump(prefixes, f)
 
-# filename = '../data/wordlist-2010.eng.txt'
+#with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    #suffixes = pickle.load(f)
+#with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    #prefixes = pickle.load(f)
 
-# wordlist = fileio.read_wordcounts(filename)
-
-#wordvectors = fileio.load_wordvectors('data/vectors_filtered/en/vectors200_filtered.txt')
-# wordvectors = fileio.load_wordvectors('data/en-vectors200_filtered.txt')
-# wordvectors = fileio.load_wordvectors('data/en-wordvectors200_small.txt')
-# wordlist = fileio.read_wordcounts(filename)
-#genAffixesListOpt(wordlist, wordvectors)
-#prefix_list = pickle.load(open('data/prefix_list.p', 'rb'))
-#suffix_list = pickle.load(open('data/suffix_list.p', 'rb'))
-# suffixes = ['s', "'s", 'ing', 'ed', 'd', 'ly', "'", 'er', 'e', 'es', 'y', 'n', 'ers', 'ness', 'a', 'r', 'i', 'rs', 'o', 't', 'al', 'l', 'man', 'ally', 'ism', 'less', 'able', 'ist', 'en', 'ity', 'on', 'in', 'an', 'h', 'ns', 'ic', 'ment', 'ian', 'ings', 'ion', 'm', 'ie', 'g', 'ists', 'c', 'land', 'men', 'k', 'son', 'is', 'est', 'ful', 'ized', 'ville', 'ship', 'na', 'ting', 'ation', 'ish', 'le', 'ne', 'ies', 'u', 'ry', 'p', 'ia', 'as', 'line', 'ling', 'ments', 'ions', 'ier', 'b', 'like', 'f', 'or', 'ton', 'la', 'hip', 'ping', 'el', 'os', 'side', 'ted', 'us', 'x', 'ize', 'z', 'ter', 'ised', 'izing', 'st', 'ta', 'led', 'house', 'ni', 'ped', 'ee', 'to', 'way']
-# prefixes = ['un', 're', 's', 'a', 'over', 'de', 'c', 'in', 'non', 'b', 'p', 't', 'dis', 'm', 'd', 'g', 'e', 'k', 'super', 'f', 'h', 'under', 'pre', 'mis', 'inter', 'out', 'i', 'n', 'r', 'w', 'mc', 'sub', 'l', 'o', 'co', 'micro', 'ma', 'la', 'bio', 'multi', 'im', 'be', 'al', 'en', 'v', 'j', 'euro', 'u', 'sa', 'air', 'tele', 'st', 'le', 'anti', 'up', 'sun', 'di', 'ca', 'to', 'mo', 'ba', 'sh', 'back', 'con', 'y', 'mid', 'ka', 'da', 'trans', 'ta', 'sea', 'se', 'bi', 'an', 'z', 'car', 'ro', 'sc', 'ha', 'pro', 'ar', 'na', 'mi', 'home', 'mar', 'fore', 'ra', 'the', 'mega', 'hand', 'pa', 'bar', 'su', 'ad', 'bo', 'mac', 'post', 'mini', 'ch', 'head']
-# genAffixCorrelation(prefixes, wordlist)
+genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)
+genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr_gold.p'%lang, suff=False)
