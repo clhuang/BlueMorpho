@@ -128,7 +128,7 @@ class MorphoChain(object):
         else:
             d['parent_in_word_list'] = math.log10(self.vocab[z.parentword])
         # presence in English dictionary
-        # d['parent_in_dict'] = z.parentword in self.dictionary
+        #d['parent_in_dict'] = z.parentword in self.dictionary
 
         #TODO USE dp -- extend C(w) using existing affixes and word2vec
         return d

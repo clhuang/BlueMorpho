@@ -125,7 +125,7 @@ def genGoldAffix(goldSegsList):
 
 entr = {'eng': 'en', 'tur': 'tr'}
 
-lang  = 'eng'
+lang  = 'tur'
 size = 'filtered'
 
 filename_w = 'data/wordlist-2010.%s%s.txt' % (lang, '' if size == 'filtered' else size)
@@ -140,15 +140,18 @@ wordlist = fileio.read_wordcounts(filename_w)
     #pickle.dump(prefixes, f)
 #genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)
 #genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr_gold.p'%lang, suff=False)
-#filename = 'data/goldstd_trainset.segmentation.eng.txt'
-#corpus = fileio.readCorpus(filename)
-#prefixes, suffixes = genGoldAffix(corpus)
-#print prefixes
-#print suffixes
-#with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
-    #pickle.dump(suffixes, f)
-#with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
-    #pickle.dump(prefixes, f)
+
+
+filename = 'data/goldstd_trainset.segmentation.%s.txt' %lang
+
+corpus = fileio.readCorpus(filename)
+prefixes, suffixes = genGoldAffix(corpus)
+print prefixes
+print suffixes
+with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    pickle.dump(suffixes, f)
+with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    pickle.dump(prefixes, f)
 
 #with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
     #suffixes = pickle.load(f)

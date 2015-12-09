@@ -1,5 +1,5 @@
-from pysrc.morphochain import MorphoChain, ParentTransformation, ParentType
-from pysrc import fileio
+from pysrc import *
+from morphochain import MorphoChain, ParentTransformation, ParentType
 import string
 import editdistance
 import pickle
@@ -82,8 +82,8 @@ def init2LangCache(translations, invTranslations, secondLangChain):
 
 
 if __name__ == "__main__":
-    mc_args = (fileio.get_wordvectors(TWOLANG_VEC, TWOLANG_LANG), fileio.get_wordlist(TWOLANG_VOCAB, TWOLANG_LANG)) + \
-            fileio.get_prefixes_affixes(TWOLANG_LANG)
+    mc_args = (get_wordvectors(TWOLANG_VEC, TWOLANG_LANG), get_wordlist(TWOLANG_VOCAB, TWOLANG_LANG)) + \
+            get_prefixes_affixes(TWOLANG_LANG)
     mc_kwargs = {}
     with open('out_py/dictvectorizer.%s.%s-%s.p' % (TWOLANG_LANG, TWOLANG_LANG, TWOLANG_LANG), 'rb') as f:
         mc_kwargs['dictvectorizer'] = pickle.load(f)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         mc_kwargs['weightvector'] = pickle.load(f)
 
     turkishMorpho = MorphoChain(*mc_args, **mc_kwargs)
-    translations, invTranslations = fileio.read_dictionary('sozluk.txt')
+    translations, invTranslations = read_dictionary('sozluk.txt')
     cache = init2LangCache(translations, invTranslations, turkishMorpho)
     with open('data/eWordToEParents.p', 'wb') as f:
         pickle.dump(cache, f)
