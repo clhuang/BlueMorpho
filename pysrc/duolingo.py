@@ -1,5 +1,5 @@
 from pysrc import *
-from morphochain import MorphoChain, ParentTransformation, ParentType
+from pysrc.morphochain import MorphoChain, ParentTransformation, ParentType
 import string
 import editdistance
 import pickle
