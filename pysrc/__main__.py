@@ -93,9 +93,9 @@ if __name__ == '__main__':
             print('%s%s %s-%s' % (args.lang, ' supervised(%s)' % args.supervised if args.supervised else '',
                                   args.vocab, args.vectors))
             morpho.computeAccuracy(devsegmentations)
+        sys.stdout = stdout
         print('%s%s %s-%s' % (args.lang, ' supervised(%s)' % args.supervised if args.supervised else '',
                               args.vocab, args.vectors))
-        sys.stdout = stdout
     morpho.computeAccuracy(devsegmentations)
 
     if args.command == 'run':

@@ -18,8 +18,11 @@ def output_decorate(func):
         stime = time.time()
         fv, gv = func(weights)
         iteration[0] += 1
-        with open('out_py/weights.p', 'wb') as f:
-            pickle.dump(weights, f)
+        try:
+            with open('out_py/weights.p', 'wb') as f:
+                pickle.dump(weights, f)
+        except:
+            pass
         print('Call %s' % iteration[0])
         print('\tWeights range: %s %s' % (weights.min(), weights.max()))
         print('\tWeights norm (d=%s): %s' % (weights.size, np.linalg.norm(weights)))
