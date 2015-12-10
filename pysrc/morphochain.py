@@ -97,8 +97,13 @@ class MorphoChain(object):
                     # d['diffpre_' + prefix] = cos_sim
             if affix in self.prefixNeighbours:
                 for n, score in self.prefixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
+<<<<<<< HEAD
                     if parent + n in self.vocab:
                         d['neighbours_COR_P'] = affix
+=======
+                    if n + parent in self.vocab:
+                        d['neighbours_COR_S'] = affix
+>>>>>>> 59c4ea172c51744c10a8d522b8a4673050403870
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
@@ -123,7 +128,7 @@ class MorphoChain(object):
             # # affix correlation TODO check for each case
             if affix in self.suffixNeighbours:
                 for n, score in self.suffixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
-                    if w[:lenparent - len(affix)] + n in self.vocab:
+                    if w[:-len(affix)] + n in self.vocab:
                         d['neighbours_COR_S'] = affix
          # parent is not in word list
         if z.parentword not in self.vocab:
