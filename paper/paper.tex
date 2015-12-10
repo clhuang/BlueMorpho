@@ -158,6 +158,38 @@ as well as gold standard segmentation training and development sets of approxima
 1000 randomly selected words. Gold standard segmentation is based on the CELEX database.
 For Turkish, the word list contains approximately 
 
+\begin{center}
+    \begin{tabular}{ | l | l | l | l | l |}
+    \hline
+    Language & Method & Precision & Recall & F1 \\ \hline
+      & Narasimhan & 0.807 & 0.722 & 0.762 \\ 
+    & Unsupervised & -  & - & - \\ 
+    English & Semi-supervised & - & - & - \\ 
+     & Two language unsupervised & - & - & - \\ 
+     & Two language semi-supervised & - & - & - \\ \hline
+     & Narasimhan & 0.743 & 0.520 & 0.612 \\ 
+    & Unsupervised & - & - & - \\ 
+    Turkish & Semi-supervised & - & - & -  \\ 
+     & Two language unsupervised  & - & - & -  \\ 
+     & Two language semi-supervised  & - & - & -  \\ \hline
+    \end{tabular}
+\end{center}
 
+\begin{center}
+    \begin{tabular}{ | l | l | l | l | l | l |}
+    \hline
+    Language & \multicolumn{2}{|c|}{\textbf{Correct Segmentations}} & \multicolumn{3}{|c|}{\textbf{Incorrect Segmentations}}\\ \hline
+      & Narasimhan & 0.807 & 0.722 & 0.762& - \\ 
+    & Unsupervised & -  & - & - & -\\ 
+    English & Semi-supervised & - & - & - & -\\ 
+     & Two language unsupervised & - & - & -& - \\ 
+     & Two language semi-supervised & - & - & - & -\\ \hline
+     & Narasimhan & 0.743 & 0.520 & 0.612 & -\\ 
+    & Unsupervised & - & - & - & -\\ 
+    Turkish & Semi-supervised & - & - & -  & -\\ 
+     & Two language unsupervised  & - & - & -  & -\\ 
+     & Two language semi-supervised  & - & - & -  & -\\ \hline
+    \end{tabular}
+\end{center}
 
 \end{document}
