@@ -45,9 +45,16 @@ Note that by constructing morphological chains rather than just finding segmenta
 
 In the unsupervised version of our model, we observe words in a wordlist with their word count of occurrences. Additionally, we have access to a large corpus of text from which we can obtain semantic information. Our objective is to generate morphological segmentations, which we do by generating morphological chains, as given by Narasimhan et al.
 
-A log-linear model is used to evaluate different pairs. For this, a feature mapping $\phi: \mathcal W \times \mathcal Z \rightarrow \mathbb R^d$ to compute a corresponding weight vector $\theta\in\mathbb R^d$. $\mathcal W$ is the set of words being trained on, and $\mathcal Z$ is the set of \emph{candidates} for the parents the words in $\mathcal W$. For a word $w\in\mathcal W$, $\mathcal Z$ is constructed by splitting $w$ at many points. To capture orthographic changes in the parent word as it undergoes the derivation from $z\in Z$ to $w$ (eg., \emph{believe} $\rightarrow$ \emph{believing}), the type of transformation is kept as part of the candidate. Thus the candidates take the form (\emph{parent}, \emph{type}), where the type is the type of transformation.
+A log-linear model is used to evaluate different pairs. For this, a feature mapping $\phi: \mathcal W \times \mathcal Z \rightarrow \mathbb R^d$ to compute a corresponding weight vector $\theta\in\mathbb R^d$. $\mathcal W$ is the set of words being trained on, and $\mathcal Z$ is the set of \emph{candidates} for the parents the words in $\mathcal W$. For a word $w\in\mathcal W$, $\mathcal Z$ is constructed by splitting $w$ at many points. To capture orthographic changes in the parent word as it undergoes the derivation from $z\in Z$ to $w$ (eg., \emph{believe} $\rightarrow$ \emph{believing}), the type of transition is kept as part of the candidate. Thus the candidates take the form (\emph{parent}, \emph{type}), where the type is the type of transition.
 
 Note that parent words usually undergo changes only when attaching suffixes. Thus there is one \emph{Prefix} class, but there are a variety of suffix classes. When acquiring a suffix, the parent word can: (1) undergo no change (\emph{class} $\rightarrow$ \emph{classes}), (2) repeat a character (\emph{star} $\rightarrow$ \emph{starring}), (3) delete a character (\emph{believe} $\rightarrow$ \emph{believing}), (4) modify a character (\emph{parry} $\rightarrow$ \emph{parried}). These correspond to the candidates (\emph{class}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
+
+\subsection{Word Vectors}
+
+% TODO wordvector citation?
+It has been shown that words can be mapped to word vectors in a reasonably-sized dimensional space such that semantically similar words align in similar directions. Thus we can compute a \emph{cosine similarity} as a distance metric between words which captures semantic similarity. Given vector representations of two words, the cosine similarity is measured as the dot product between the word vectors of those words.
+
+In our work, we generate 200-dimensional vectors for words by using Word2Vec, which looks at word alignment  and co-occurrence patterns across many documents. In generating our vectors, we use text from Wikipedia along with a corpus of news articles.
 
 \subsection{Features}
 
@@ -56,8 +63,8 @@ The model uses a variety of features covering orthographic and semantic aspects 
 \begin{description}
     \item[Affixes] Prefixes and suffixes appear in many words. For a given word with its potential parent, the affix removed can be compared against a precompiled list of potential affixes. This allows the model to learn which affixes are real and apply them to other cases with the same potential affix.
     \item[Affix Correlation] Similar to comparing affixes across words, we can use the joint distribution of words and their potential affixes. There is a correlation between affixes that can usually attach to the same stem, often corresponding to the part of speech. For example, the participles formed from the suffixes -ing and -ed usually occur together. For candidates with an affix that is correlated with another affix, we can check if the parent with the other affix also occurs in the observed wordlist.
-    \item[Semantic Similarity] Morphologically related words should have similar meanings. We measure the \emph{cosine similarity} between the word and its candidate parent. % TODO wordvector citation?
-        It has been shown that words can be mapped to word vectors in a reasonably-sized dimensional space such that semantically similar 
+    \item[Semantic Similarity] Morphologically related words should have similar meanings. We measure the cosine similarity between the word and its candidate parent as a feature to represent semantic similarity.
+    \item[Transformations] As discussed above, some derivations involve a change to the parent word. To allow for non-concatenative morphology, we use binary features which capture the type of transformation. We use the same types of transformations for features as we do for generating candidates: repetitions, deletions, and modifications. The set of binary features are the cartesian product of the type of
 \end{description}
 
 \section{Semi-supervised Learning with Known Word Segmentations}
