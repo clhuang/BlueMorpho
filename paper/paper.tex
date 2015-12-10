@@ -264,15 +264,13 @@ full is 878k
             \hline
             Language & Method & Precision & Recall & F1 \\ \hline
                      & \citeauthor{Narasimhan15} & 0.807 & 0.722 & 0.762 \\ 
-                     & Unsupervised (Baseline) & -  & - & - \\ 
-            English & Semi-supervised & - & - & - \\ 
-                    & Two language unsupervised & - & - & - \\ 
-                    & Two language semi-supervised & - & - & - \\ \hline
+                     & Unsupervised (Baseline) & 0.664  & 0.649 & 0.656 \\ 
+            English & Semi-supervised ($\lambda=15$) & 0.892 & 0.762 & 0.822 \\ 
+                    & Two language unsupervised & 0.432 & 0.652 & 0.520 \\ 
+                    & Two language semi-supervised & 0.449 & 0.759 & 0.564 \\ \hline
                     & \citeauthor{Narasimhan15} & 0.743 & 0.520 & 0.612 \\ 
-                    & Unsupervised (Baseline) & - & - & - \\ 
-            Turkish & Semi-supervised & - & - & -  \\ 
-                    & Two language unsupervised  & - & - & -  \\ 
-                    & Two language semi-supervised  & - & - & -  \\ \hline
+                    & Unsupervised (Baseline) & 0.675 & 0.371 & 0.479 \\ 
+            Turkish & Semi-supervised ($\lambda=50$) & 0.763 & 0.642 & 0.697 \\ 
         \end{tabular}
         \caption{Accuracies of Various Models}
     \end{center}
@@ -289,7 +287,7 @@ full is 878k
                     & ewers' &  ewer/s/' & dutifully & dutiful/ly & duti/ful/ly\\ 
                     & yowling & yowl/ing & ignominiously & ignominious/ly& ignomni/ous/ly \\ 
             \hline
-                    & - & - & - & - & -\\ 
+                    & müzisyenlerinden & müzisyen/ler/i/nden & - & - & -\\ 
             Turkish & - & - & - & - & -\\ 
                     & - & - & - & - & -\\ 
                     & - & - & - & - & -\\ \hline
