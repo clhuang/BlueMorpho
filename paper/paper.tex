@@ -448,6 +448,13 @@ and the score is positively influenced up to a point---as $\alpha$ increases fur
 dominates the loss function, and the information from the unstructured model ceases to be used,
 causing a slow decline in the score.
 
+We try using differently sized training sets by varying frequency thresholds for the words.
+As training sets often contain some amount of error and noise (the English wordlist
+contains an html tag as a word), the frequency threshhold is a good approximation
+of error; words with low frequency are may be mispelling or words from other languages.
+We find that for datasets ranging from 2500 words to 48,000 words give similar quality results,
+with a sharp drop off in scores afterwards.
+
 We found that adding the additional Turkish candidates and features regarding translation
 did not help accuracy of training very much; this is likely due to the incompleteness of the translation
 dictionary only being able to provide potential translations for very few words. Furthermore, due to the ambiguity
