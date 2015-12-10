@@ -294,6 +294,12 @@ Therefore, our model becomes:
 where $C'(w)$ is the potential parents of $w$ updated with potential irregular translations,
 and $T(w)$ is the set of Turkish translations of $w$.
 
+To build the two-language model, we first train the Turkish model with semi-supervised data.
+Using this model and an English-Turkish/Turkish-English dictionary, we derive an extended
+set of possible English parent candidates for English words, and additional features. 
+These are then used in conjunction with training the English model on the unlabeled word lists,
+and also with the labeled training data.
+
 \section{Experimental Validation}
 
 \subsection{Data}
@@ -328,12 +334,12 @@ that are correctly identified by our estimator.
             Language & Method & Precision & Recall & F1 \\ \hline
                      & \citeauthor{Narasimhan15} & 0.807 & 0.722 & 0.762 \\ 
                      & Unsupervised (Baseline) & 0.664  & 0.649 & 0.656 \\ 
-            English & Semi-supervised ($\lambda=15$) & 0.892 & 0.762 & 0.822 \\ 
+            English & Semi-supervised ($\alpha=15$) & 0.892 & 0.762 & 0.822 \\ 
                     & Two language unsupervised & 0.432 & 0.652 & 0.520 \\ 
                     & Two language semi-supervised & 0.449 & 0.759 & 0.564 \\ \hline
                     & \citeauthor{Narasimhan15} & 0.743 & 0.520 & 0.612 \\ 
             Turkish & Unsupervised (Baseline) & 0.675 & 0.371 & 0.479 \\ 
-                    & Semi-supervised ($\lambda=50$) & 0.763 & 0.642 & 0.697 \\ \hline
+                    & Semi-supervised ($\alpha=50$) & 0.763 & 0.642 & 0.697 \\ \hline
         \end{tabular}
         \caption{Accuracies of Various Models. For our model, we used the top 48000 English words in the wordlist,
         and the MorphoChallenge 2010 Train/Development sets for training and testing, respectively.}
