@@ -291,12 +291,12 @@ class MorphoChain(object):
             return 0.0
         return self.wordvectors.similarity(w1, w2)
 
-    def computeAccuracy(self, segmentations=None):
+    def computeAccuracy(self, segmentations=None, verbose=False):
         if segmentations is None:
             segmentations = self.segmentations
         wordlist = segmentations.keys()
         predictions = zip(wordlist, map(self.genSeg, wordlist))
-        return accuracy.score(segmentations, predictions)
+        return accuracy.score(segmentations, predictions, verbose)
 
     def computeParentValidity(self, segmentations=None, k=1):
         """
