@@ -61,7 +61,7 @@ class MorphoChain(object):
         MAX_PREF_LEN = 5
         MAX_SUFF_LEN = 5
         d = {'BIAS': 1}
-        if len(w) == len(z.parentword):
+        if z.transformtype == ParentType.STOP:
             if len(w) > 2:
                 d['STP_E_'] = w[-2:]
                 d['STP_B_'] = w[:2]
@@ -241,11 +241,20 @@ class MorphoChain(object):
         fv = self.dictvectorizer.transform(featureDict)
         return np.asscalar(fv.dot(self.weightvector))
 
-    # predicts top k candidates given a word
+    # predicts top k candidates given a word, and scores
     def predict(self, word, k=None):
         parentsFeatures = self.getParentsFeatures(word)
         parentsScores = Counter({parent: self.scoreFeatures(features)
                          for parent, features in parentsFeatures.items()})
+        return parentsScores.most_common(k)
+
+    def predict_logprobs(self, word, k=None):
+        parentsFeatures = self.getParentsFeatures(word)
+        parentsScores = Counter({parent: self.scoreFeatures(features)
+                         for parent, features in parentsFeatures.items()})
+        normc = np.log(sum(np.exp(i) for i in parentsScores.values()))
+        for parent in parentsScores:
+            parentsScores[parent] -= normc
         return parentsScores.most_common(k)
 
     def genSeg(self, word):
