@@ -46,14 +46,22 @@ In the unsupervised version of our model, we observe words in a wordlist with th
 
 A log-linear model is used to evaluate different pairs. For this, a feature mapping $\phi: \mathcal W \times \mathcal Z \rightarrow \mathbb R^d$ to compute a corresponding weight vector $\theta\in\mathbb R^d$. $\mathcal W$ is the set of words being trained on, and $\mathcal Z$ is the set of \emph{candidates} for the parents the words in $\mathcal W$. For a word $w\in\mathcal W$, $\mathcal Z$ is constructed by splitting $w$ at many points. To capture orthographic changes in the parent word as it undergoes the derivation from $z\in Z$ to $w$ (eg., \emph{believe} $\rightarrow$ \emph{believing}), the type of transition is kept as part of the candidate. Thus the candidates take the form (\emph{parent}, \emph{type}), where the type is the type of transition.
 
-Note that parent words usually undergo changes only when attaching suffixes. Thus there is one \emph{Prefix} class, but there are a variety of suffix classes. When acquiring a suffix, the parent word can: (1) undergo no change (\emph{class} $\rightarrow$ \emph{classes}), (2) repeat a character (\emph{star} $\rightarrow$ \emph{starring}), (3) delete a character (\emph{believe} $\rightarrow$ \emph{believing}), (4) modify a character (\emph{parry} $\rightarrow$ \emph{parried}). These correspond to the candidates (\emph{class}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
+Note that parent words usually undergo changes only when attaching suffixes. Thus there is one \emph{Prefix} class, but there are a variety of suffix classes. When acquiring a suffix, the parent word can:
+\begin{enumerate}
+    \item undergo no change (\emph{class} $\rightarrow$ \emph{classes})
+    \item repeat a character (\emph{star} $\rightarrow$ \emph{starring})
+    \item delete a character (\emph{believe} $\rightarrow$ \emph{believing})
+    \item modify a character (\emph{parry} $\rightarrow$ \emph{parried}).
+\end{enumerate}
+These correspond to the candidates (\emph{class}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
 
 \subsection{Word Vectors}
 
 % TODO wordvector citation?
 It has been shown that words can be mapped to word vectors in a reasonably-sized dimensional space such that semantically similar words align in similar directions. Thus we can compute a \emph{cosine similarity} as a distance metric between words which captures semantic similarity. Given vector representations of two words, the cosine similarity is measured as the dot product between the word vectors of those words.
 
-In our work, we generate 200-dimensional vectors for words by using Word2Vec, which looks at word alignment  and co-occurrence patterns across many documents. In generating our vectors, we use text from Wikipedia along with a corpus of news articles.
+In our work, we generate 200-dimensional vectors for words by using Word2Vec, which looks at word alignment  and co-occurrence patterns across many documents. In generating our vectors, we use text from Wikipedia,
+to generate the english word vectors, along with the BOUN corpus of news articles to generate Turkish word vectors.
 
 \subsection{Features}
 
@@ -184,7 +192,19 @@ a wordlist with word frequencies of approximately 878,000 words scraped from the
 Wortschatz collection from the University of Leipzig, CLEF, and the Europarl corpus
 as well as gold standard segmentation training and development sets of approximately 
 1000 randomly selected words. Gold standard segmentation is based on the CELEX database.
-For Turkish, the word list contains approximately 
+For Turkish, the word list contains approximately 670,000 words, with gold standards
+from a morphological parser developed at Boğaziçi University. The Turkish wordlist
+was obtained from a significantly smaller corpus -- at 1 million words, as compared
+to an English corpus of 18 million.
+
+We tested on 4 different sizes 
+of wordvector 
+small is 2.5k
+med is 
+large is 160k
+full is 878k
+
+\subsection{Evaluation Model}
 
 \begin{center}
     \begin{tabular}{ | l | l | l | l | l |}
@@ -207,10 +227,11 @@ For Turkish, the word list contains approximately
     \begin{tabular}{ | l | l | l | l | l | l |}
     \hline
     Language & \multicolumn{2}{|c|}{\textbf{Correct Segmentations}} & \multicolumn{3}{|c|}{\textbf{Incorrect Segmentations}}\\ \hline
-      & Narasimhan & 0.807 & 0.722 & 0.762& - \\ 
-    & Unsupervised & -  & - & - & -\\ 
-    English & Semi-supervised & - & - & - & -\\ 
-     & Two language unsupervised & - & - & -& - \\ 
+     & Word & Segmentation & Word & Predicted & Correct\\ \hline
+    & 'suburbanite' & 'suburb/an/ite' & 'provokingly' & 'provok/ing/ly' & 'provoking/ly'  \\ 
+    'buffeted' & 'buffeted' & -  & - & - & -\\ 
+    "ewers'" &  "ewer/s/'" & - & - & - & -\\ 
+    'yowling' & 'yowl/ing' & - & - & -& - \\ 
      & Two language semi-supervised & - & - & - & -\\ \hline
      & Narasimhan & 0.743 & 0.520 & 0.612 & -\\ 
     & Unsupervised & - & - & - & -\\ 
