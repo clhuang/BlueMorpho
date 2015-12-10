@@ -428,6 +428,11 @@ performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% 
 This is a substantial but expected increase; observing the unsupervised model reveals that it performs
 many segmentations with nonexistent affixes, which are rectified by providing input about known affixes.
 
+It should be noted that as $\alpha$ increases, the likelihood of the labeled training data matters more and more,
+and the score is positively influenced up to a point---as \alpha increases further, the labeled data
+dominates the loss function, and the information from the unstructured model ceases to be used,
+causing a slow decline in the score.
+
 We found that adding the additional Turkish candidates and features regarding translation
 did not help accuracy of training very much; this is likely due to the incompleteness of the translation
 dictionary only being able to provide potential translations for very few words, and due to the ambiguity
