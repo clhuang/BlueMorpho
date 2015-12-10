@@ -101,6 +101,35 @@ With this substitution, we can formulate the contrastive likelihood as
     L_C(\theta; D) = \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}}
 \end{equation}
 
+With a regularization term, this becomes
+\begin{equation}
+    \begin{split}
+        L_C(\theta; D) &= \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}} \\
+        &\qquad - \lambda \|\theta\|^2
+    \end{split}
+\end{equation}
+
+Our EM-algorithm will then operate on the log-likelihood, which takes the following form:
+\begin{equation}
+    \begin{split}
+        L_L(\theta; D) &= \sum_{w^*\in D} \Bigg(\log \sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)} \Bigg.\\
+        &\qquad\Bigg. -\log \sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)} \Bigg) \\
+        &\qquad - \lambda \|\theta\|^2
+    \end{split}
+\end{equation}
+
+This has the gradient given by
+\begin{equation}
+    \begin{split}
+        &\frac{\partial L_L(\theta; D)}{\partial \theta_j} \\
+        &= \sum_{w^*\in D} \Bigg( \frac{\sum_{z\in C(w^*)} \phi_j(w^*,z)\cdot e^{\theta\cdot\phi(w^*,z)}} {\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} \Bigg. \\
+        &\qquad -\frac{\sum_{w\in N(w^*)} \sum_{z\in C(w)} \phi_j(w,z)\cdot e^{\theta\cdot\phi(w,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}} \Bigg) \\
+        &\qquad -2\lambda\theta_j
+    \end{split}
+\end{equation}
+
+We optimize $L_L(\theta; D)$ with its gradient using the LBFGS-B algorithm (Byrd et al., 1995).
+
 \section{Semi-supervised Learning with Known Word Segmentations}
 In addition to maximizing the log-likelihood of the known wordlist,
 we can also use explicit feedback regarding the correct segmentation of known words.
