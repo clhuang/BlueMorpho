@@ -63,6 +63,7 @@ def optimize_weights(X, nzs, widsneighbors, lamb=0, output=True, maxiter=MAX_ITE
         bounds=[(-BOUNDS, BOUNDS)]*X.shape[1],
         approx_grad=False,
         fprime=None,
+        iprint=0,
         maxiter=maxiter)[0]
 
 
@@ -127,7 +128,6 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0):
     widx = np.fromiter((i[0] for i in widsneighbors), int)
 
     def f(weights):
-        stime = time.time()
         Xp = np.exp(X.dot(weights)).flatten()  # e^{\theta*\phi(w, z)}
         F = np.bincount(arow, Xp, minlength=len(nzs))
 
@@ -139,6 +139,9 @@ def get_optimizer_fn(X, nzs, widsneighbors, lamb=0):
 
         data = Gcoo.data * Xp[orow] * fn[nrow]
         gv = np.bincount(Gcoo.col, data, minlength=nfeatures)
+
+        if fv != fv:
+            return (99999999999999999.0, np.zeros(nfeatures))
 
         fv -= lamb * weights.dot(weights)
         gv -= 2 * lamb * weights
