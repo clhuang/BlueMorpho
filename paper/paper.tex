@@ -1,5 +1,6 @@
 \documentclass[11pt,twocolumn]{article} 
 \usepackage{simpleConference}
+\usepackage{natbib}
 \usepackage{amsmath}
 \usepackage{times}
 \usepackage{graphicx}
@@ -44,7 +45,7 @@ We wish to
 %%TODO
 
 \section{Unsupervised Model}
-Our model builds on work done by Narasimhan et al. (2015) in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
+Our model builds on work done by \citet{Narasimhan15} in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
 
 Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments. Narasimhan makes use of this shared information by constructing a model which analyzes parent-child pairs.
 
@@ -154,24 +155,24 @@ is equal to the product of the likelihoods of each word-to-parent transition wit
 Therefore, the likelihood of the segmentation of the training data is the product of the likelihoods
 of each correct word-to-parent transition for every morphological chain in the training data.
 
-Therefore, the likelihood of the training data is given as such:
+We want to maximize the likelihood of the document $D$, where $w$ is a word in $D$ and $c$ is
+its segmentation:
 \begin{equation}
-    \prod_{w, c \in D} P(c | w) = \prod_{w, c \in D}\left(\prod_{w', z' \in MC(w)} P(z | w)\right)
+    \prod_{w, c \in D} P(c | w) = \prod_{w, c \in D}\left(\prod_{w', z' \in MC(w, c)} P(z' | w')\right)
 \end{equation}
+where $MC(w)$ represents the parents and transitions in the morphological chain of $w$ going up to the root,
+constructed using its segmentation.
 
-We want to maximize the probability of the document $D$, where $w$ is a word in $D$ and $c$ is
-its segmentation. As above, we 
-%TODO better explanation
-
-Therefore, the log-likelihood of our training data can be expressed as
+We can simplify this product by letting $TR(D)$ be all pairs of words and parents implied in each of
+the morphological chains of all words in $D$ ---
+then, the log-likelihood of our training data can be expressed as
 \begin{equation}
     \begin{split}
-        L_S(\theta; D) &= \log{\prod_{w, z \in D} P(z|w)} \\
-                       &= \sum_{w, z \in D} \Bigg(\theta \cdot \phi(w, z) \Bigg. \\
+        L_S(\theta; D) &= \log{\prod_{w, z \in TR(D)} P(z|w)} \\
+                       &= \sum_{w, z \in TR(D)} \Bigg(\theta \cdot \phi(w, z) \Bigg. \\
                        &\qquad\Bigg. - \log\left(\sum_{z' \in C(w)} e^{\theta \cdot \phi(w, z')} \right)\Bigg)
    \end{split}
 \end{equation}
-where $w, z$ represent every morphological chain transition implied in the training data.
 
 We can also express its gradient as such:
 \begin{equation}
@@ -286,5 +287,8 @@ full is 878k
         \caption{Results 'n shit TODO}
     \end{center}
 \end{table*}
+
+\bibliography{paper}
+\bibliographystyle{plainnat}
 
 \end{document}
