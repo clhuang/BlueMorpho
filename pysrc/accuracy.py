@@ -3,7 +3,7 @@ import pprint
 
 
 def seg_points(segs):
-    return set(np.cumsum([len(i) for i in segs])[:-1])
+    return set(np.cumsum([len(i) for i in segs if i != '~'])[:-1])
 
 
 def score(gold_segs_list, predictions_segs_list, verbose=False):
