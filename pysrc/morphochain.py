@@ -1,4 +1,5 @@
 from collections import namedtuple, Counter
+import sys
 import math
 import string
 import itertools
@@ -47,10 +48,13 @@ class MorphoChain(object):
         Return dict from possible parents to feature dict
         """
         parentsAndFeatures = {}
+        parentt = None
         for z in self.genCandidates(w):
+            if z.transformtype == ParentType.STOP:
+                parentt = z
+                continue
             parentsAndFeatures[z] = self.getFeatures(w, z)
-        z = ParentTransformation(w, ParentType.STOP, None)
-        parentsAndFeatures[z] = self.getFeatures(
+        parentsAndFeatures[parentt] = self.getFeatures(
             w, z, max([d['cos'] for d in parentsAndFeatures.values()] or [0]))
         return parentsAndFeatures
 
@@ -161,6 +165,7 @@ class MorphoChain(object):
         for x in range(1, (len(word) + 2) // 2):
             parent = word[x:]
             candidates.append(ParentTransformation(parent, ParentType.PREFIX, None))
+        candidates.append(ParentTransformation(word, ParentType.STOP, None))
         # Stopping condition handled in getParentsAndFeatures
         # candidates.append(ParentTransformation(word, ParentType.STOP))
         return candidates
@@ -293,7 +298,7 @@ class MorphoChain(object):
         elif candidate[1] == ParentType.PREFIX:
             return word[:-p_len] + SEG_SEP + self.genSeg(parent)
         else:
-            raise
+            raise Exception((word, parent))
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
