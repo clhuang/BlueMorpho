@@ -39,15 +39,16 @@ class TwoLangMorphoChain(MorphoChain):
         d = super(TwoLangMorphoChain, self).getFeatures(w, z, maxCosSimilarity)
         if z.olangconfidence is not None:
             if z.transformtype == ParentType.STOP:
-                d['stop_olangconfidence'] = z.olangconfidence
+                d['stop_olangconfidence'] = z.olangconfidence * 0.01
             else:
-                d['olangconfidence'] = z.olangconfidence
+                d['olangconfidence'] = z.olangconfidence * 0.01
         else:
             d['no_translated_parents'] = 1
         if z.transformtype != ParentType.OLANG and z.olangconfidence is not None:
-            d['repeat'] = z.olangconfidence
+            d['repeat'] = z.olangconfidence * 0.01
         else:
             d['no_repeat'] = 1
+        d['lendiff%s' % (len(w) - len(z))] = 1
         return d
 
 
@@ -78,7 +79,7 @@ def parentHeuristic(word, parent):
 def init2LangCache(translations, invTranslations, secondLangChain):
     tWordToEngParents = {}
     for tWord in invTranslations:  # every Turkish word that can be translated to
-        turkishParents = [(z.parentword, c) for z, c in secondLangChain.predict(tWord)]
+        turkishParents = [(z.parentword, c) for z, c in secondLangChain.predict_logprobs(tWord)]
         englishParents = {}
         turkishParents.sort(key=lambda x: x[1])  # sort by increasing confidence
         for tParent, c in turkishParents:
