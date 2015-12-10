@@ -1,0 +1,4 @@
+eng small-full
+Precision: 0.490245971162
+Recall: 0.642222222222
+F1: 0.556036556037

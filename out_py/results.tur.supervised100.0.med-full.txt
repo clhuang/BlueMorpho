@@ -1,0 +1,4 @@
+tur supervised(100.0) med-full
+Precision: 0.75190048376
+Recall: 0.649164677804
+F1: 0.696765930195
