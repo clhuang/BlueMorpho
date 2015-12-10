@@ -63,10 +63,10 @@ A log-linear model is used to evaluate different pairs. For this, a feature mapp
 
 Note that parent words usually undergo changes only when attaching suffixes. Thus there is one \emph{Prefix} class, but there are a variety of suffix classes. When acquiring a suffix, the parent word can:
 \begin{enumerate}[label=(\arabic*)]
-    \item undergo no change (\emph{bike} $\rightarrow$ \emph{bikes})
-    \item repeat a character (\emph{star} $\rightarrow$ \emph{starring})
-    \item delete a character (\emph{believe} $\rightarrow$ \emph{believing})
-    \item modify a character (\emph{parry} $\rightarrow$ \emph{parried}).
+    \item Undergo no change (\emph{bike} $\rightarrow$ \emph{bikes})
+    \item Repeat a character (\emph{star} $\rightarrow$ \emph{starring})
+    \item Delete a character (\emph{believe} $\rightarrow$ \emph{believing})
+    \item Modify a character (\emph{parry} $\rightarrow$ \emph{parried})
 \end{enumerate}
 
 These correspond to the candidates (\emph{bike}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
@@ -161,35 +161,37 @@ To generate a morphological chain for $w$, we recursively predict the MLE parent
 In a semi-supervised learning model, we still have access to a large wordlist of observed words as well as the corpus for semantic information. In addition, we have a small amount of pre-segmented words (about 2\% of the size of the wordlist). We use these pre-segmented words to generate probable morphological chains, which we can then incorporate into the likelihood model. Specifically, we want to maximize the joint distribution of observing the words in the wordlist along with observing the segmentations of the words from the list of pre-segmented words, with some weighting on each of them.
 
 \subsection{Generating Chains from Segmentations}
-Based on the correct segmentation of a word, we construct a probable chain. Assuming no infixes, each parent must be formed by removing segments at either the beginning or the end of the word. In generating morphological chains from segmentations, we assume most segmentations are derived from single affix transitions. Our method cannot generate the correct chain for compound words where both parts are derived from parent words, for example.
+Based on the correct segmentation of a word, we construct a probable chain. In addition to the split points of the segmentation, we have access to tags for each segment which give the original form of the segment. This information is used to construct the type (\emph{Repeat}, \emph{Modify}, etc) of the transformation.
 
-Given a segmentation, we have two candidates for the segmentation of the parent word:
+Assuming no infixes, each parent must be formed by removing segments at either the beginning or the end of the word. In generating morphological chains from segmentations, we assume most segmentations are derived from single affix transitions. Our method cannot generate the correct chain for compound words where both parts are derived from parent words, for example.
+
+Given a segmentation for a word which is not a base word, we have two candidates for the segmentation of the parent word:
 \begin{enumerate}[label=(\arabic*)]
-    \item
+    \item The parent is the child without a prefix.
+    \item The parent is the child without a suffix.
 \end{enumerate}
 
-\subsection{Semi-supervised Model}
-In addition to maximizing the log-likelihood of the known wordlist,
-we can also use explicit feedback regarding the correct segmentation of known words.
-From these known segmentations, we can use these segmentations to reconstruct
-the morphological chains that would lead to the correct segmentation of the word.
+We use a heuristic to decide between them. Our heuristic captures properties like the frequency of the parent word in the wordlist, the cosine similarity between the parent and child, and the length of the parent relative to the child. We select the parent candidate with the higher score.
 
-In addition to the neighborhood log-likelihood that we maximize,
-we also want to maximize the log-likelihood of the correct segmentation of the training data.
+By recursing on the parent, we can generate more word-parent pairs that we want our model to generate.
+
+\subsection{Semi-supervised Model}
+Using the word-parent pairs generated from the pre-segmented list, 
+in addition to maximizing the log-likelihood of the known wordlist,
+we can also maximize the log-likelihood of the correct segmentation of the training data.
+
 If a given word can be expressed as a morphological chain, the likelihood of its correct segmentation
 is equal to the product of the likelihoods of each word-to-parent transition within the morphological chain.
-
 Therefore, the likelihood of the segmentation of the training data is the product of the likelihoods
 of each correct word-to-parent transition for every morphological chain in the training data.
 
-We want to maximize the likelihood of the document $D$, where $w$ is a word in $D$ and $c$ is
-its segmentation:
+Let $MC(w)$ be the set of word-parent pairs constructed from the morphological chains of the pre-segmented list.
+We want to maximize the likelihood of the document $D$ in the following:
 
 \begin{equation}
     \prod_{w, c \in D} P(c | w) = \prod_{w, c \in D}\left(\prod_{w', z' \in MC(w, c)} P(z' | w')\right)
 \end{equation}
-where $MC(w)$ represents the parents and transitions in the morphological chain of $w$ going up to the root,
-constructed using its segmentation.
+where $w$ is a word in $D$ and $c$ is its segmentation.
 
 We can simplify this product by letting $TR(D)$ be all pairs of words and parents implied in each of
 the morphological chains of all words in $D$ ---
