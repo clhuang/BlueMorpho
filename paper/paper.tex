@@ -34,6 +34,21 @@
 \section{Introduction}
 Morphologically related words\dots %%TODO
 
+\section{Background Work}
+Our model builds on work done by Narasimhan et al. (2015) in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
+
+Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments. Narasimhan makes use of this shared information by constructing a model which analyzes parent-child pairs.
+
+\subsection{Model}
+
+A log-linear model is used to evaluate different pairs. For this, a feature mapping $\phi: \mathcal W \times \mathcal Z \rightarrow \mathbb R^d$ to compute a corresponding weight vector $\theta\in\mathbb R^d$. $\mathcal W$ is the set of words being trained on, and $\mathcal Z$ is the set of \emph{candidates} for the parents the words in $\mathcal W$. For a word $w\in\mathcal W$, $\mathcal Z$ is constructed by splitting $w$ at many points. To capture orthographic changes in the parent word as it undergoes the derivation from $z\in Z$ to $w$ (eg., \emph{believe} $\rightarrow$ \emph{believing}), the type of transformation is kept as part of the candidate. Thus the candidates take the form (\emph{parent}, \emph{type}), where the type is the type of transformation.
+
+Note that parent words usually undergo changes only when attaching suffixes. Thus there is one \emph{Prefix} class, but there are a variety of suffix classes. When acquiring a suffix, the parent word can: (1) undergo no change (\emph{class} $\rightarrow$ \emph{classes}), (2) repeat a character (\emph{star} $\rightarrow$ \emph{starring}), (3) delete a character (\emph{believe} $\rightarrow$ \emph{believing}), (4) modify a character (\emph{parry} $\rightarrow$ \emph{parried}). These correspond to the candidates (\emph{class}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
+
+\subsection{Features}
+
+The model uses a variety of features covering orthographic and semantic aspects of the word-candidate pairs. These features are computed for pairs $(w,z) \in \mathcal W \times \mathcal Z$.
+
 \section{Semi-supervised Learning with Known Word Segmentations}
 In addition to maximizing the log-likelihood of the known wordlist,
 we can also use explicit feedback regarding the correct segmentation of known words.
