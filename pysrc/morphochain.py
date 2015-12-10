@@ -263,6 +263,8 @@ class MorphoChain(object):
         return parentsScores.most_common(k)
 
     def genSeg(self, word):
+        if len(word) < 3:
+            return word
         SEG_SEP = "/"
         if "-" in word:
             segmentations = []

@@ -20,7 +20,8 @@ def read_wordcounts(filename, dump = False):
     with open(filename) as f:
         for line in f:
             count, word = line.split()
-            d[word] = int(count)
+            if len(word) > 3:
+                d[word] = int(count)
     if dump:
         pickle.dump(d, open("data/wordcounts.p", "wb"))
     return d
