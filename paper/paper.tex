@@ -294,8 +294,8 @@ to the English corpus of 18 million.
                     & Two language unsupervised & 0.432 & 0.652 & 0.520 \\ 
                     & Two language semi-supervised & 0.449 & 0.759 & 0.564 \\ \hline
                     & \citeauthor{Narasimhan15} & 0.743 & 0.520 & 0.612 \\ 
-                    & Unsupervised (Baseline) & 0.675 & 0.371 & 0.479 \\ 
-            Turkish & Semi-supervised ($\lambda=50$) & 0.763 & 0.642 & 0.697 \\ 
+            Turkish & Unsupervised (Baseline) & 0.675 & 0.371 & 0.479 \\ 
+                    & Semi-supervised ($\lambda=50$) & 0.763 & 0.642 & 0.697 \\ \hline
         \end{tabular}
         \caption{Accuracies of Various Models. For our model, we used the top 48000 English words in the wordlist,
         and the MorphoChallenge 2010 Train/Development sets for training and testing, respectively.}
@@ -324,9 +324,9 @@ to the English corpus of 18 million.
 
 \section{Results}
 We found that utilizing information from the gold segmentations, we were able to substantially increase our
-performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% to 70.3\% with Turkish.
+performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% to 69.7\% with Turkish.
 This is a substantial but expected increase; observing the unsupervised model reveals that it performs
-many single-letter 
+many segmentations with nonexistent affixes, which are rectified by providing input about known affixes.
 
 We found that adding the additional Turkish candidates and features regarding translation
 did not help accuracy of training very much; this is likely due to the incompleteness of the translation
