@@ -57,7 +57,7 @@ def genAffixesListOpt(wordlist, wordvectors):
                     suffixvectorcnt[suffix] += 1
                     suffixes[suffix] += sim * (math.log(count) + math.log(wordlist[prefix]))
                 else:
-                    sim = 0.2
+                    sim = 0.1
                     suffixes[suffix] += sim * (math.log(count) + math.log(wordlist[prefix]))
 
             if len(prefix) <= MAX_AFFIX_LEN and wordlist[suffix] >= 30 and '-' not in prefix and '\'' not in prefix[1:]:
@@ -69,15 +69,20 @@ def genAffixesListOpt(wordlist, wordvectors):
                     prefixvectorcnt[prefix] += 1
                     prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
                 else:
-                    sim = 0.2
+                    sim = 0.1
                     prefixes[prefix] += sim * (math.log(count) + math.log(wordlist[suffix]))
 
     for suffix in suffixvector:
         suffixvector[suffix] /= suffixvectorcnt[suffix]
         suffixes[suffix] *= (1 + 0.3 * np.linalg.norm(suffixvector[suffix]))
+        if len(suffix) == 1:
+            suffixes[suffix] *= .1
+
     for prefix in prefixvector:
         prefixvector[prefix] /= prefixvectorcnt[prefix]
         prefixes[prefix] *= (1 + 0.3 * np.linalg.norm(prefixvector[prefix]))
+        if len(prefix) == 1:
+            prefixes[prefix] *= .1
     suff_list = [s[0] for s in suffixes.most_common(100)]
     pref_list = [p[0] for p in prefixes.most_common(100)]
     return suff_list, pref_list
@@ -125,38 +130,46 @@ def genGoldAffix(goldSegsList):
 
 entr = {'eng': 'en', 'tur': 'tr'}
 
-lang  = 'tur'
+lang  = 'eng'
 size = 'filtered'
 
 filename_w = 'data/wordlist-2010.%s%s.txt' % (lang, '' if size == 'filtered' else size)
 filename_v = 'data/%s-wordvectors200_%s.bin' % (entr[lang], size)
 wordlist = fileio.read_wordcounts(filename_w)
-#wordvectors = fileio.load_wordvectors(filename_v, binary=True)
+wordvectors = fileio.load_wordvectors(filename_v, binary=True)
 
-#suffixes, prefixes = genAffixesListOpt(wordlist, wordvectors)
-#with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
-    #pickle.dump(suffixes, f)
-#with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
-    #pickle.dump(prefixes, f)
+suffixes, prefixes = genAffixesListOpt(wordlist, wordvectors)
+print suffixes
+print prefixes
+with open('data/%s_suffix_list.p' % lang, 'wb') as f:
+    pickle.dump(suffixes, f)
+with open('data/%s_prefix_list.p' % lang, 'wb') as f:
+    pickle.dump(prefixes, f)
+with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    suffixes = pickle.load(f)
+with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    prefixes = pickle.load(f)
+
+
 #genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)
 #genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr_gold.p'%lang, suff=False)
 
 
-filename = 'data/goldstd_trainset.segmentation.%s.txt' %lang
+#filename = 'data/goldstd_trainset.segmentation.%s.txt' %lang
 
-corpus = fileio.readCorpus(filename)
-prefixes, suffixes = genGoldAffix(corpus)
-print prefixes
-print suffixes
-with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
-    pickle.dump(suffixes, f)
-with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
-    pickle.dump(prefixes, f)
-
+#corpus = fileio.readCorpus(filename)
+#prefixes, suffixes = genGoldAffix(corpus)
+#print prefixes
+#print suffixes
 #with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
-    #suffixes = pickle.load(f)
+    #pickle.dump(suffixes, f)
 #with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
-    #prefixes = pickle.load(f)
+    #pickle.dump(prefixes, f)
 
-genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)
-genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr_gold.p'%lang, suff=False)
+##with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    ##suffixes = pickle.load(f)
+##with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    ##prefixes = pickle.load(f)
+
+#genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)
+#genAffixCorrelation(prefixes, wordlist, fname='data/%s_prefix_corr_gold.p'%lang, suff=False)
