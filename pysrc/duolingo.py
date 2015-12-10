@@ -1,4 +1,5 @@
 from pysrc import *
+import sys
 from pysrc.morphochain import MorphoChain, ParentTransformation, ParentType
 import string
 import pickle
@@ -8,6 +9,16 @@ TWOLANG_LANG = 'tur'
 TWOLANG_VEC = 'full'
 TWOLANG_VOCAB = 'med'
 TWOLANG_SUPERVISED = 20.0
+
+
+def sharedPrefixLen(parent, word):
+    lenbegin = 0
+    for a, b in zip(parent, word):
+        if a != b:
+            break
+        lenbegin += 1
+    return lenbegin
+
 
 class TwoLangMorphoChain(MorphoChain):
     def __init__(self, wordvectors, vocab, affixes, affixNeighbours, eWordToEngParents,
@@ -30,22 +41,21 @@ class TwoLangMorphoChain(MorphoChain):
         for parent, transscore in self.eWordToEngParents[word]:
             if parent in canddict:
                 canddict[parent] = canddict[parent]._replace(olangconfidence=transscore)
-            else:
+            elif sharedPrefixLen(parent, word) > 0:
                 canddict[parent] = ParentTransformation(parent, ParentType.OLANG, transscore)
-
         return list(canddict.values())
 
     def getFeatures(self, w, z, maxCosSimilarity=None):
         d = super(TwoLangMorphoChain, self).getFeatures(w, z, maxCosSimilarity)
         if z.olangconfidence is not None:
             if z.transformtype == ParentType.STOP:
-                d['stop_olangconfidence'] = z.olangconfidence * 0.01
+                d['stop_olangconfidence'] = z.olangconfidence
             else:
-                d['olangconfidence'] = z.olangconfidence * 0.01
+                d['olangconfidence'] = z.olangconfidence
         else:
             d['no_translated_parents'] = 1
         if z.transformtype != ParentType.OLANG and z.olangconfidence is not None:
-            d['repeat'] = z.olangconfidence * 0.01
+            d['repeat'] = z.olangconfidence
         else:
             d['no_repeat'] = 1
         d['lendiff%s' % (len(w) - len(z))] = 1

@@ -6,8 +6,7 @@
 \usepackage{amssymb}
 \usepackage{url,hyperref}
 
-\begin{document}
-
+\begin{document} 
 \title{Extending Morphological Chains with Supervised Learning and Cross-Language Features}
 
 \author{Calvin Huang (calvinh@mit.edu)\\
@@ -44,7 +43,7 @@ We wish to
 
 %%TODO
 
-\section{Background Work}
+\section{Unsupervised Model}
 Our model builds on work done by Narasimhan et al. (2015) in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
 
 Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments. Narasimhan makes use of this shared information by constructing a model which analyzes parent-child pairs.
@@ -86,6 +85,31 @@ The model uses a variety of features covering orthographic and semantic aspects 
     \item[Wordlist] Most of the time, we want the parents to be valid words. To this effect, we compare the candidate parent against the wordlist, and add a feature for the log of the word count. Additionally, we set a binary feature corresponding to whether the word was found at all in the wordlist.
     \item[Stop Features] We have a number of miscellaneous features targeted at finding the end of chains. These include orthographic information like the length of the parent, unigrams and bigrams at the beginning and end of the parent, and the highest cosine similarity between the word and any of its candidate parents.
 \end{description}
+
+\subsection{Unsupervised Learning}
+Recall that in our model, we want to find weights $\theta$ for the feature vectors $\phi(w,z)$, where $w\in\mathcal W$ and $z\in\mathcal Z$. Define the probabilities of a word-candidate pair $(w,z)$ as $P(w,z)\propto e^{\theta\cdot\phi(w,z)}$. Then the probability of a candidate $z$ ocuring given $w$ is
+\begin{equation}
+    P(z|w) = \frac{e^{\theta\cdot\phi(w,z)}} {\sum_{z'\in C(w)} e^{\theta\cdot\phi(w,z')}}
+\end{equation}
+
+Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We use the EM-algorithm to maximize the likelihood over $\theta$ as given by
+
+\begin{equation}
+    \begin{split}
+        L(\theta; D) &= \prod_{w^*\in D} P(w^*) \\
+        &= \prod_{w^*\in D} \sum_{z\in C(w^*)} P(w^*, z) \\
+        &= \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in\Sigma^*}\sum_{z\in C(w) e^{\theta\cdot\phi(w,z)}}} \\
+    \end{split}
+\end{equation}
+
+We cannot compute $L(\theta; D)$ directly since we cannot compute over all strings in $\Sigma^*$. Instead, we approximate this distribution by considering only strings which are similar to those encountered in $D$.
+
+We use the method of Contrastive Estimation (Smith and Eisner, 2005) and substitute the space of all strings $\Sigma^*$ with neighbors of each word, $N(w)$. Toward this end, we transpose pairs of consecutive letters of $w$ near both ends of the word. We also do both simultaneously. Together these form our set of neighbors for $w$. The neighbors form a proxy for $\Sigma^*$, and represent the set of strings we want to reduce the probability of seeing in our model because they are not observed. This has the benefit of providing contrast in the structure of words while not requiring the model to look at the entire $\Sigma^*$.
+
+With this substitution, we can formulate the contrastive likelihood as
+\begin{equation}
+    L_C(\theta; D) = \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}}
+\end{equation}
 
 \section{Semi-supervised Learning with Known Word Segmentations}
 In addition to maximizing the log-likelihood of the known wordlist,
@@ -143,14 +167,14 @@ As before, with its gradient given above, we minimize $L(\theta, D)$ with LBFGS-
 \section{Using Cross-Language Features and Candidates}
 Due to the simple nature of our parent candidate generation routine,
 there are many cases in which the potential parent is not actually generated;
-for example, the morphological parent of "feet" is the singular "foot";
+for example, the morphological parent of ``feet'' is the singular ``foot'';
 however, there is no prefix or suffix that turns one into the other, and
-therefore the parent for "feet" is not generated by our system.
+therefore the parent for ``feet'' is not generated by our system.
 
 However, other languages may not have such an irregular transformation
 for the same words, for example in Turkish the corresponding translations
-for "feet" and "foot" are "ayaklar" and "ayak". A properly trained Turkish
-morphological parent model will correctly detect "ayak" as a parent of "ayaklar",
+for ``feet'' and ``foot'' are ``ayaklar'' and ``ayak''. A properly trained Turkish
+morphological parent model will correctly detect ``ayak'' as a parent of ``ayaklar'',
 and can be used to suggest morphological parents in English after translation.
 
 Since there are multiple possible morphological parents for a given word, and multiple
@@ -181,10 +205,10 @@ as well as gold standard segmentation training and development sets of approxima
 1000 randomly selected words. Gold standard segmentation is based on the CELEX database.
 For Turkish, the word list contains approximately 670,000 words, with gold standards
 from a morphological parser developed at Boğaziçi University. The Turkish wordlist
-was obtained from a significantly smaller corpus -- at 1 million words, as compared
-to an English corpus of 18 million.
+was obtained from a significantly smaller corpus --- at 1 million words, compared
+to the English corpus of 18 million.
 
-We tested on 4 different sizes 
+We tested on 4 different sizes of wordvectors:
 of wordvector 
 small is 2.5k
 med is 
@@ -193,39 +217,45 @@ full is 878k
 
 \subsection{Evaluation Model}
 
-\begin{center}
-    \begin{tabular}{ | l | l | l | l | l |}
-    \hline
-    Language & Method & Precision & Recall & F1 \\ \hline
-      & Narasimhan & 0.807 & 0.722 & 0.762 \\ 
-    & Unsupervised & -  & - & - \\ 
-    English & Semi-supervised & - & - & - \\ 
-     & Two language unsupervised & - & - & - \\ 
-     & Two language semi-supervised & - & - & - \\ \hline
-     & Narasimhan & 0.743 & 0.520 & 0.612 \\ 
-    & Unsupervised & - & - & - \\ 
-    Turkish & Semi-supervised & - & - & -  \\ 
-     & Two language unsupervised  & - & - & -  \\ 
-     & Two language semi-supervised  & - & - & -  \\ \hline
-    \end{tabular}
-\end{center}
+\begin{table*}
+    \begin{center}
+        \begin{tabular}{ | l | l | l | l | l |}
+            \hline
+            Language & Method & Precision & Recall & F1 \\ \hline
+                     & Narasimhan & 0.807 & 0.722 & 0.762 \\ 
+                     & Unsupervised & -  & - & - \\ 
+            English & Semi-supervised & - & - & - \\ 
+                    & Two language unsupervised & - & - & - \\ 
+                    & Two language semi-supervised & - & - & - \\ \hline
+                    & Narasimhan & 0.743 & 0.520 & 0.612 \\ 
+                    & Unsupervised & - & - & - \\ 
+            Turkish & Semi-supervised & - & - & -  \\ 
+                    & Two language unsupervised  & - & - & -  \\ 
+                    & Two language semi-supervised  & - & - & -  \\ \hline
+        \end{tabular}
+        \caption{Results 'n shit TODO}
+    \end{center}
+\end{table*}
 
-\begin{center}
-    \begin{tabular}{ | l | l | l | l | l | l |}
-    \hline
-    Language & \multicolumn{2}{|c|}{\textbf{Correct Segmentations}} & \multicolumn{3}{|c|}{\textbf{Incorrect Segmentations}}\\ \hline
-     & Word & Segmentation & Word & Predicted & Correct\\ \hline
-    & 'suburbanite' & 'suburb/an/ite' & 'provokingly' & 'provok/ing/ly' & 'provoking/ly'  \\ 
-    'buffeted' & 'buffeted' & -  & - & - & -\\ 
-    "ewers'" &  "ewer/s/'" & - & - & - & -\\ 
-    'yowling' & 'yowl/ing' & - & - & -& - \\ 
-     & Two language semi-supervised & - & - & - & -\\ \hline
-     & Narasimhan & 0.743 & 0.520 & 0.612 & -\\ 
-    & Unsupervised & - & - & - & -\\ 
-    Turkish & Semi-supervised & - & - & -  & -\\ 
-     & Two language unsupervised  & - & - & -  & -\\ 
-     & Two language semi-supervised  & - & - & -  & -\\ \hline
-    \end{tabular}
-\end{center}
+\begin{table*}
+    \begin{center}
+        \begin{tabular}{ | l | l | l | l | l | l |}
+            \hline
+            Language & \multicolumn{2}{|c|}{\textbf{Correct Segmentations}} & \multicolumn{3}{|c|}{\textbf{Incorrect Segmentations}}\\ \hline
+                     & Word & Segmentation & Word & Predicted & Correct\\ \hline
+            English & suburbanite & suburb/an/ite & provokingly & provok/ing/ly & provoking/ly  \\ 
+                    & buffeted & buffeted & -  & - & -\\ 
+                    & ewers' &  ewer/s/' & - & - & -\\ 
+                    & yowling & yowl/ing & - & -& - \\ 
+                    & Two language semi-supervised & - & - & - & -\\ \hline
+                    & Narasimhan & 0.743 & 0.520 & 0.612 & -\\ 
+                    & Unsupervised & - & - & - & -\\ 
+            Turkish & Semi-supervised & - & - & -  & -\\ 
+                    & Two language unsupervised  & - & - & -  & -\\ 
+                    & Two language semi-supervised  & - & - & -  & -\\ \hline
+        \end{tabular}
+        \caption{Results 'n shit TODO}
+    \end{center}
+\end{table*}
 
 \end{document}
