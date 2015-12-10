@@ -7,6 +7,25 @@
 \usepackage{amssymb}
 \usepackage{enumitem}
 \usepackage{url,hyperref}
+\usepackage{tikz,pgfplots}
+
+\newcommand\engsmallw{2514}
+\newcommand\engmedw{48146}
+\newcommand\englargew{126537}
+\newcommand\engfullw{878036}
+\newcommand\tursmallw{1592}
+\newcommand\turmedw{14909}
+\newcommand\turlargew{89023}
+\newcommand\turfullw{617298}
+
+\newcommand\engsmallv{10000}
+\newcommand\engmedv{100000}
+\newcommand\englargev{500000}
+\newcommand\engfullv{1477761}
+\newcommand\tursmallv{10000}
+\newcommand\turmedv{100000}
+\newcommand\turlargev{300000}
+\newcommand\turfullv{593836}
 
 \begin{document} 
 \title{Extending Morphological Chains with Supervised Learning and Cross-Language Features}
@@ -323,6 +342,77 @@ to the English corpus of 18 million.
 \end{table*}
 
 \section{Results}
+\begin{figure}
+    \begin{tikzpicture}
+        \begin{axis}[
+                height=0.8\linewidth,
+                width=\linewidth,
+                xmin=1000, xmax=300000,
+                ymin=0, ymax=1,
+                xmode=log,
+                xlabel=Training Vocab Size,
+                ylabel=F-1 Score,
+            ]
+            \addplot coordinates {
+                (\engsmallw, 0.556)
+                (\engmedw, 0.656)
+                (\englargew, 0.383)
+            };
+            \addlegendentry{English}
+            \addplot coordinates {
+                (\tursmallw, 0.124)
+                (\turmedw, 0.479)
+                (\turlargew, 0.520)
+            };
+            \addlegendentry{Turkish}
+        \end{axis}
+    \end{tikzpicture}
+    \label{fig:unsupervised}
+    \caption{Performance of unsupervised model after frequency thresholding training data}
+\end{figure}
+
+\begin{figure}
+    \begin{tikzpicture}
+        \begin{axis}[
+                height=0.8\linewidth,
+                width=\linewidth,
+                xmin=0, xmax=20,
+                ymin=0, ymax=1,
+                xlabel=$\alpha$,
+                ylabel=F-1 Score,
+                legend pos=south east,
+            ]
+            \addplot coordinates {
+                (0, 0.656)
+                (0.1, 0.683)
+                (1, 0.752)
+                (3, 0.803)
+                (5, 0.815)
+                (8, 0.824)
+                (10, 0.823)
+                (12, 0.821)
+                (15, 0.822)
+                (20, 0.817)
+            };
+            \addlegendentry{English}
+            \addplot coordinates {
+                (0, 0.479)
+                (0.1, 0.580)
+                (1, 0.663)
+                (3, 0.668)
+                (5, 0.670)
+                (8, 0.680)
+                (10, 0.680)
+                (20, 0.691)
+                (50, 0.697)
+            };
+            \addlegendentry{Turkish}
+        \end{axis}
+    \end{tikzpicture}
+    \label{fig:supervised}
+    \caption{Performance of semi-supervised model based on $\alpha$.}
+\end{figure}
+
 We found that utilizing information from the gold segmentations, we were able to substantially increase our
 performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% to 69.7\% with Turkish.
 This is a substantial but expected increase; observing the unsupervised model reveals that it performs
