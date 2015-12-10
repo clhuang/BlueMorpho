@@ -1,4 +1,5 @@
 \documentclass[11pt,twocolumn]{article} 
+\usepackage[utf8]{inputenc}
 \usepackage{simpleConference}
 \usepackage{natbib}
 \usepackage{amsmath}
@@ -30,10 +31,9 @@
 \begin{document} 
 \title{Extending Morphological Chains with Supervised Learning and Cross-Language Features}
 
-\author{Calvin Huang (calvinh@mit.edu)\\
-    Brian Shimanuki (bshimanuki@mit.edu)\\
-    Charlotte Chen (czchen@mit.edu)
-\\
+\author{Calvin Huang (calvinh@mit.edu), 6.867\\
+    Brian Shimanuki (bshimanuki@mit.edu), 6.867\\
+    Charlotte Chen (czchen@mit.edu), 6.806\\
 }
 
 \maketitle
@@ -429,15 +429,17 @@ This is a substantial but expected increase; observing the unsupervised model re
 many segmentations with nonexistent affixes, which are rectified by providing input about known affixes.
 
 It should be noted that as $\alpha$ increases, the likelihood of the labeled training data matters more and more,
-and the score is positively influenced up to a point---as \alpha increases further, the labeled data
+and the score is positively influenced up to a point---as $\alpha$ increases further, the labeled data
 dominates the loss function, and the information from the unstructured model ceases to be used,
 causing a slow decline in the score.
 
 We found that adding the additional Turkish candidates and features regarding translation
 did not help accuracy of training very much; this is likely due to the incompleteness of the translation
-dictionary only being able to provide potential translations for very few words, and due to the ambiguity
+dictionary only being able to provide potential translations for very few words. Furthermore, due to the ambiguity
 of translation, it's very hard to tell whether or not something would make a good parent of a word after
-translating the word into Turkish, taking the parent in Turkish, and translating it back.
+translating the word into Turkish, taking the parent in Turkish, and translating it back. The additional candidates,
+for the most part, reduced accuracy by increasing the number of incorrect parent choices,
+as opposed to their intended result of providing parents that our candidate generation algorithms missed.
 \bibliography{paper}
 \bibliographystyle{plainnat}
 
