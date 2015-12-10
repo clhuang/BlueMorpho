@@ -64,7 +64,9 @@ The model uses a variety of features covering orthographic and semantic aspects 
     \item[Affixes] Prefixes and suffixes appear in many words. For a given word with its potential parent, the affix removed can be compared against a precompiled list of potential affixes. This allows the model to learn which affixes are real and apply them to other cases with the same potential affix.
     \item[Affix Correlation] Similar to comparing affixes across words, we can use the joint distribution of words and their potential affixes. There is a correlation between affixes that can usually attach to the same stem, often corresponding to the part of speech. For example, the participles formed from the suffixes -ing and -ed usually occur together. For candidates with an affix that is correlated with another affix, we can check if the parent with the other affix also occurs in the observed wordlist.
     \item[Semantic Similarity] Morphologically related words should have similar meanings. We measure the cosine similarity between the word and its candidate parent as a feature to represent semantic similarity.
-    \item[Transformations] As discussed above, some derivations involve a change to the parent word. To allow for non-concatenative morphology, we use binary features which capture the type of transformation. We use the same types of transformations for features as we do for generating candidates: repetitions, deletions, and modifications. The set of binary features are the cartesian product of the type of
+    \item[Transformations] As discussed above, some derivations involve a change to the parent word. To allow for non-concatenative morphology, we use binary features which capture the type of transformation. We use the same types of transformations for features as we do for generating candidates: repetitions, deletions, and modifications. The set of binary features are the cartesian product of the type of transformation with the characters transformed.
+    \item[Wordlist] Most of the time, we want the parents to be valid words. To this effect, we compare the candidate parent against the wordlist, and add a feature for the log of the word count. Additionally, we set a binary feature corresponding to whether the word was found at all in the wordlist.
+    \item[Stop Features] We have a number of miscellaneous features targeted at finding the end of chains. These include orthographic information like the length of the parent, unigrams and bigrams at the beginning and end of the parent, and the highest cosine similarity between the word and any of its candidate parents.
 \end{description}
 
 \section{Semi-supervised Learning with Known Word Segmentations}
@@ -93,15 +95,17 @@ Therefore, the log-likelihood of our training data can be expressed as
 \begin{equation}
     \begin{split}
         L_S(\theta; D) &= \log{\prod_{w, z \in D} P(z|w)} \\
-                     &= \sum_{w, z \in D} \left(\theta \cdot \phi(w, z) - \log\left(\sum_{z' \in C(w)} e^{\theta \cdot \phi(w, z')} \right)\right)
-\end{split}
+                       &= \sum_{w, z \in D} \Bigg(\theta \cdot \phi(w, z) \Bigg. \\
+                       &\qquad\Bigg. - \log\left(\sum_{z' \in C(w)} e^{\theta \cdot \phi(w, z')} \right)\Bigg)
+   \end{split}
 \end{equation}
 where $w, z$ represent every morphological chain transition implied in the training data.
 
 We can also express its gradient as such:
 \begin{equation}
     \begin{split}
-        \nabla_\theta L_S &= \sum_{w, z \in D} \left(\phi(w, z) - \frac{\sum_{z' \in C(w)} \phi(w, z') e^{\theta \cdot \phi(w, z')} }{\sum_{z' \in C(w)} e^{\theta \cdot \phi(w, z')}}\right)
+        \nabla_\theta L_S &= \sum_{w, z \in D} \Bigg(\phi(w, z) \Bigg. \\
+                          &\qquad\left. - \frac{\sum_{z' \in C(w)} \phi(w, z') e^{\theta \cdot \phi(w, z')} }{\sum_{z' \in C(w)} e^{\theta \cdot \phi(w, z')}}\right)
     \end{split}
 \end{equation}
 
