@@ -19,8 +19,8 @@ def score(gold_segs_list, predictions_segs_list, verbose=False):
             continue
         predpoints = len(pred_segs) - 1
         predTotal += predpoints
-        bestc = 0
-        bestg = 0
+        bestc = -1
+        bestg = -1
         for i, gold_segs in enumerate(gold_segs_list[word][0]):
             gset = seg_points(gold_segs)
             pset = seg_points(pred_segs)
@@ -31,7 +31,7 @@ def score(gold_segs_list, predictions_segs_list, verbose=False):
                 bestc = num_correct_segs
                 bestg = num_gold_segs
         if bestc == bestg == predpoints:
-            correctSegs.append(pred_seg)
+            correctSegs.append((pred_seg, '/'.join(gold_segs)))
         else:
             incorrectSegs.append((pred_seg, "/".join(gold_segs)))
 
