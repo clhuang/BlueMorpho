@@ -50,6 +50,8 @@ Our model builds on work done by \citet{Narasimhan15} in constructing \emph{morp
 Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments.
 \citeauthor{Narasimhan15} makes use of this shared information by constructing a model which analyzes parent-child pairs.
 
+Because we have chains where different chains can share segments, it is natural to consider the graph formulation where each word is represented by a node and each parent-child transition is represented by a directed edge. Then if we consider only the most likely parent for a word,\footnote{Words are not restricted to having a single valid parent (or segmentation). In cases where there are multiple parents (segmentations), we care only that the algorithm selects one of them.} the resulting graph forms a forest, and our objective is to find the path to from a given node to the root in an unsupervised manner without any explicit information about any of the edges.
+
 Note that by constructing morphological chains rather than just finding segmentations, more information is gained about the words tested. Generating the chain, in addition to segmenting a word, also finds the base word and predicts the order in which the morphemes attach to the base word.
 
 \subsection{Model}
@@ -60,12 +62,12 @@ A log-linear model is used to evaluate different pairs. For this, a feature mapp
 
 Note that parent words usually undergo changes only when attaching suffixes. Thus there is one \emph{Prefix} class, but there are a variety of suffix classes. When acquiring a suffix, the parent word can:
 \begin{enumerate}
-    \item undergo no change (\emph{class} $\rightarrow$ \emph{classes})
+    \item undergo no change (\emph{bike} $\rightarrow$ \emph{bikes})
     \item repeat a character (\emph{star} $\rightarrow$ \emph{starring})
     \item delete a character (\emph{believe} $\rightarrow$ \emph{believing})
     \item modify a character (\emph{parry} $\rightarrow$ \emph{parried}).
 \end{enumerate}
-These correspond to the candidates (\emph{class}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
+These correspond to the candidates (\emph{bike}, \emph{Suffix}), (\emph{star}, \emph{Repeat}), (\emph{believe}, \emph{Delete}), and (\emph{parry}, \emph{Modify}). Finally, there is a \emph{Stop} type, which is used to signify that the word is a base word.
 
 \subsection{Word Vectors}
 
@@ -91,10 +93,11 @@ The model uses a variety of features covering orthographic and semantic aspects 
 \subsection{Unsupervised Learning}
 Recall that in our model, we want to find weights $\theta$ for the feature vectors $\phi(w,z)$, where $w\in\mathcal W$ and $z\in\mathcal Z$. Define the probabilities of a word-candidate pair $(w,z)$ as $P(w,z)\propto e^{\theta\cdot\phi(w,z)}$. Then the probability of a candidate $z$ ocuring given $w$ is
 \begin{equation}
+    \label{equ:prob_par}
     P(z|w) = \frac{e^{\theta\cdot\phi(w,z)}} {\sum_{z'\in C(w)} e^{\theta\cdot\phi(w,z')}}
 \end{equation}
 
-Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We use the EM-algorithm to maximize the likelihood over $\theta$ as given by
+Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We use the EM-algorithm to iteratively maximize the likelihood over $\theta$ as given by
 
 \begin{equation}
     \begin{split}
@@ -142,7 +145,14 @@ This has the gradient given by
 
 We optimize $L_L(\theta; D)$ with its gradient using the LBFGS-B algorithm.
 
+\subsection{Prediction}
+The EM-algorithm yields an optimal $\theta^*$ of weights of the features generated from $D$. Then given a test word $w$, we can predict the probability of a given parent candidate $z$ by computing $P(z|w)=e^{\theta^*\cdot\phi(w,z)}$ as in \autoref{equ:prob_par}. To predict the parent of $w$, we pick the MLE candidate from parent candidates generated for $w$, which we can generate in the same way as we did while training.
+
+To generate a morphological chain for $w$, we recursively predict the MLE parent for $w$, then the MLE parent of that prediction, and so forth until the \emph{Stop} candidate is predicted. Together, this sequence forms our chain. A morphological segmentation can be constructed from the chain by splitting $w$ at every point corresponding to where each of the edges in the chain splits its child word.
+
 \section{Semi-supervised Learning with Known Word Segmentations}
+In a semi-supervised learning model, we still have access to a large wordlist of observed words as well as the corpus for semantic information. In addition, we have a small amount of pre-segmented words (about 2\% of the size of the wordlist). We use these pre-segmented words to generate
+
 In addition to maximizing the log-likelihood of the known wordlist,
 we can also use explicit feedback regarding the correct segmentation of known words.
 From these known segmentations, we can use these segmentations to reconstruct
@@ -255,7 +265,7 @@ of wordvector
 small is 2.5k
 med is 
 large is 160k
-full is 878k
+full is 878k TODO
 
 \subsection{Evaluation Model}
 
