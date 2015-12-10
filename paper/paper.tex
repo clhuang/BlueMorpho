@@ -24,19 +24,18 @@
     Building on an existing algorithm to perform morphological analysis,
     based on using semantic features and contrastive estimation to detect morphological chains,
     we investigate the effects of various types of extensions to this algorithm.
-    We began by adding certain features to the model and heuristics for prefix/suffix selection.
-    In addition, we extend the unsupervised model with the log-likelihood of known word segmentations,
+    We extend the unsupervised model with the log-likelihood of known word segmentations,
     producing a semi-supervised model.
     Finally, we also attempt to use Turkish morphological parents and an English-Turkish translation
-    dictionary to help detect irregular English word segmentations and transformations.
+    dictionary to help detect and disambiguate English word segmentations and transformations.
 \end{abstract}
 
 % TODO explain existing code
 \section{Introduction}
-The division of a word into morphemes--basic units of meaning--- encodes information about
+The division of a word into morphemes--basic units of meaning---encodes information about
 something
 When performing morphological analysis, there are a few different cases to consider: words that share similar
-meaning but appear in diffrent syntactic contexts (``German" ---``Germanic"), new words generated from
+meaning but appear in diffrent syntactic contexts (``German"---``Germanic"), new words generated from
 the combination of two separate words (``bookcase"|``book"---``case"), words with dissimilar meaning but
 derived from one another ``insuffcient"---``sufficient"). In the first and last case, words are often related
 by the addition of preffixes, suffixes, and other affixes. This allows us to form morphological chains - which
@@ -192,8 +191,7 @@ where $MC(w)$ represents the parents and transitions in the morphological chain 
 constructed using its segmentation.
 
 We can simplify this product by letting $TR(D)$ be all pairs of words and parents implied in each of
-the morphological chains of all words in $D$ ---
-then, the log-likelihood of our training data can be expressed as
+the morphological chains of all words in $D$---then, the log-likelihood of our training data can be expressed as
 
 \begin{equation}
     \begin{split}
@@ -278,15 +276,8 @@ as well as gold standard segmentation training and development sets of approxima
 1000 randomly selected words. Gold standard segmentation is based on the CELEX database.
 For Turkish, the word list contains approximately 670,000 words, with gold standards
 from a morphological parser developed at Boğaziçi University. The Turkish wordlist
-was obtained from a significantly smaller corpus --- at 1 million words, compared
+was obtained from a significantly smaller corpus---at 1 million words, compared
 to the English corpus of 18 million.
-
-We tested on 4 different sizes of wordvectors:
-of wordvector 
-small is 2.5k
-med is 
-large is 160k
-full is 878k TODO
 
 \subsection{Evaluation Model}
 
@@ -306,7 +297,8 @@ full is 878k TODO
                     & Two language unsupervised  & - & - & -  \\ 
                     & Two language semi-supervised  & - & - & -  \\ \hline
         \end{tabular}
-        \caption{Accuracies of Various Models}
+        \caption{Accuracies of Various Models. For our model, we used the top 48000 English words in the wordlist,
+        and the MorphoChallenge 2010 Train/Development sets for training and testing, respectively.}
     \end{center}
 \end{table*}
 
@@ -321,15 +313,10 @@ full is 878k TODO
                     & ewers' &  ewer/s/' & dutifully & dutiful/ly & duti/ful/ly\\ 
                     & yowling & yowl/ing & ignominiously & ignominious/ly& ignomni/ous/ly \\ 
             \hline
-                    & - & - & - & - & -\\ 
-            Turkish & - & - & - & - & -\\ 
-                    & - & - & - & - & -\\ 
-                    & - & - & - & - & -\\ \hline
-                    & - & - & - & -  & -\\ 
-                    & - & - & - & -  & -\\ 
-    English (dual-language) & - & - & - & -  & -\\ 
-                    & - & - & - & -  & -\\ 
-                    & - & - & - & -  & -\\ \hline
+                    & kompozisyonudur & kompozisyon/u/dur & aklInIz & aklI/nIz & akl/In/Iz\\ 
+            Turkish & ayet & ayet & genCliGinizi & genC/liGi/ni/zi & genC/liG/iniz/i\\ 
+                    & rUyalarInIz & rUya/lar/InIz & irdeleyin & irdeley/in & irdele/yin\\ 
+                    & borular & boru/lar & indirgenemez & indirgenemez & indirge/n/emez\\ \hline
                 \end{tabular}
         \caption{Examples of Correct and Incorrect Segmentations}
     \end{center}
@@ -338,6 +325,8 @@ full is 878k TODO
 \section{Results}
 We found that utilizing information from the gold segmentations, we were able to substantially increase our
 performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% to 70.3\% with Turkish.
+This is a substantial but expected increase; observing the unsupervised model reveals that it performs
+many single-letter 
 
 We found that adding the additional Turkish candidates and features regarding translation
 did not help accuracy of training very much; this is likely due to the incompleteness of the translation
