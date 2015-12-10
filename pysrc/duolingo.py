@@ -8,7 +8,7 @@ import pickle
 TWOLANG_LANG = 'tur'
 TWOLANG_VEC = 'full'
 TWOLANG_VOCAB = 'med'
-TWOLANG_SUPERVISED = 0.5
+TWOLANG_SUPERVISED = 20.0
 
 class TwoLangMorphoChain(MorphoChain):
     def __init__(self, wordvectors, vocab, affixes, affixNeighbours, eWordToEngParents,
@@ -51,7 +51,10 @@ class TwoLangMorphoChain(MorphoChain):
 
 def parentHeuristic(word, parent):
     dist = editdistance.eval(word, parent)
-    return dist < 6 and dist < len(word) / 2 and dist < len(parent) / 2
+    lendiff = len(word) - len(parent)
+    return lendiff >= -1 and\
+            dist < 6 and\
+            dist <= (len(word) + 2) / 2
 
 
 def init2LangCache(translations, invTranslations, secondLangChain):
@@ -76,7 +79,7 @@ def init2LangCache(translations, invTranslations, secondLangChain):
         englishParents = {}
         for parent, score in possibleParents:
             englishParents[parent] = score
-        eWordToEngParents[eWord] = [(parent, score) for parent, score in possibleParents.items()
+        eWordToEngParents[eWord] = [(parent, score) for parent, score in englishParents.items()
                                             if parentHeuristic(eWord, parent)]
     return eWordToEngParents
 
@@ -85,14 +88,14 @@ if __name__ == "__main__":
     mc_args = (get_wordvectors(TWOLANG_VEC, TWOLANG_LANG), get_wordlist(TWOLANG_VOCAB, TWOLANG_LANG)) + \
             get_prefixes_affixes(TWOLANG_LANG)
     mc_kwargs = {}
-    with open('out_py/dictvectorizer.%s.%s-%s.p' % (TWOLANG_LANG, TWOLANG_LANG, TWOLANG_LANG), 'rb') as f:
+    with open('out_py/dictvectorizer.%s.%s-%s.p' % (TWOLANG_LANG, TWOLANG_VOCAB, TWOLANG_VEC), 'rb') as f:
         mc_kwargs['dictvectorizer'] = pickle.load(f)
     with open('out_py/weights.%s%s.%s-%s.p' % (TWOLANG_LANG, '.supervised%s' % TWOLANG_SUPERVISED
                                                 if TWOLANG_SUPERVISED else '', TWOLANG_VOCAB, TWOLANG_VEC), 'rb') as f:
         mc_kwargs['weightvector'] = pickle.load(f)
 
     turkishMorpho = MorphoChain(*mc_args, **mc_kwargs)
-    translations, invTranslations = read_dictionary('sozluk.txt')
+    translations, invTranslations = fileio.read_dictionary('data/sozluk.txt')
     cache = init2LangCache(translations, invTranslations, turkishMorpho)
     with open('data/eWordToEParents.p', 'wb') as f:
         pickle.dump(cache, f)
