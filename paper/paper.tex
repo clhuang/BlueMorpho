@@ -32,7 +32,17 @@
 
 % TODO explain existing code
 \section{Introduction}
-Morphologically related words\dots %%TODO
+The division of a word into morphemes--basic units of meaning--- encodes information about
+something
+When performing morphological analysis, there are a few different cases to consider: words that share similar
+meaning but appear in diffrent syntactic contexts (``German" ---``Germanic"), new words generated from
+the combination of two separate words (``bookcase"|``book"---``case"), words with dissimilar meaning but
+derived from one another ``insuffcient"---``sufficient"). In the first and last case, words are often related
+by the addition of preffixes, suffixes, and other affixes. This allows us to form morphological chains - which
+link a base word to its derivative through a series of affixations.
+We wish to 
+
+%%TODO
 
 \section{Background Work}
 Our model builds on work done by Narasimhan et al. (2015) in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
@@ -96,7 +106,8 @@ Therefore, the likelihood of the training data is given as such:
     \prod_{w, c \in D} P(c | w) = \prod_{w, c \in D}\left(\prod_{w', z' \in MC(w)} P(z | w)\right)
 \end{equation}
 
-explanation blah
+We want to maximize the probability of the document $D$, where $w$ is a word in $D$ and $c$ is
+its segmentation. As above, we 
 %TODO better explanation
 
 Therefore, the log-likelihood of our training data can be expressed as
