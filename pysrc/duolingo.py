@@ -41,8 +41,8 @@ class TwoLangMorphoChain(MorphoChain):
         for parent, transscore in self.eWordToEngParents[word]:
             if parent in canddict:
                 canddict[parent] = canddict[parent]._replace(olangconfidence=transscore)
-            elif sharedPrefixLen(parent, word) > 0:
-                canddict[parent] = ParentTransformation(parent, ParentType.OLANG, transscore)
+            # elif sharedPrefixLen(parent, word) > 0 and self.wordvectors.similarity(parent, word) > 0.5:
+                # canddict[parent] = ParentTransformation(parent, ParentType.OLANG, transscore)
         return list(canddict.values())
 
     def getFeatures(self, w, z, maxCosSimilarity=None):
