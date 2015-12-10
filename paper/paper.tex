@@ -1,5 +1,6 @@
 \documentclass[11pt,twocolumn]{article} 
 \usepackage{simpleConference}
+\usepackage{natbib}
 \usepackage{amsmath}
 \usepackage{times}
 \usepackage{graphicx}
@@ -44,9 +45,10 @@ We wish to
 %%TODO
 
 \section{Unsupervised Model}
-Our model builds on work done by Narasimhan et al. (2015) in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
+Our model builds on work done by \citet{Narasimhan15} in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
 
-Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments. Narasimhan makes use of this shared information by constructing a model which analyzes parent-child pairs.
+Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments.
+\citeauthor{Narasimhan15} makes use of this shared information by constructing a model which analyzes parent-child pairs.
 
 Because we have chains where different chains can share segments, it is natural to consider the graph formulation where each word is represented by a node and each parent-child transition is represented by a directed edge. Then if we consider only the most likely parent for a word,\footnote{Words are not restricted to having a single valid parent (or segmentation). In cases where there are multiple parents (segmentations), we care only that the algorithm selects one of them.} the resulting graph forms a forest, and our objective is to find the path to from a given node to the root in an unsupervised manner without any explicit information about any of the edges.
 
@@ -54,7 +56,7 @@ Note that by constructing morphological chains rather than just finding segmenta
 
 \subsection{Model}
 
-In the unsupervised version of our model, we observe words in a wordlist with their word count of occurrences. Additionally, we have access to a large corpus of text from which we can obtain semantic information. Our objective is to generate morphological segmentations, which we do by generating morphological chains, as given by Narasimhan et al.
+In the unsupervised version of our model, we observe words in a wordlist with their word count of occurrences. Additionally, we have access to a large corpus of text from which we can obtain semantic information. Our objective is to generate morphological segmentations, which we do by generating morphological chains, as given by \citeauthor{Narasimhan15}
 
 A log-linear model is used to evaluate different pairs. For this, a feature mapping $\phi: \mathcal W \times \mathcal Z \rightarrow \mathbb R^d$ to compute a corresponding weight vector $\theta\in\mathbb R^d$. $\mathcal W$ is the set of words being trained on, and $\mathcal Z$ is the set of \emph{candidates} for the parents the words in $\mathcal W$. For a word $w\in\mathcal W$, $\mathcal Z$ is constructed by splitting $w$ at many points. To capture orthographic changes in the parent word as it undergoes the derivation from $z\in Z$ to $w$ (eg., \emph{believe} $\rightarrow$ \emph{believing}), the type of transition is kept as part of the candidate. Thus the candidates take the form (\emph{parent}, \emph{type}), where the type is the type of transition.
 
@@ -73,7 +75,7 @@ These correspond to the candidates (\emph{bike}, \emph{Suffix}), (\emph{star}, \
 It has been shown that words can be mapped to word vectors in a reasonably-sized dimensional space such that semantically similar words align in similar directions. Thus we can compute a \emph{cosine similarity} as a distance metric between words which captures semantic similarity. Given vector representations of two words, the cosine similarity is measured as the dot product between the word vectors of those words.
 
 In our work, we generate 200-dimensional vectors for words by using Word2Vec, which looks at word alignment  and co-occurrence patterns across many documents. In generating our vectors, we use text from Wikipedia,
-to generate the english word vectors, along with the BOUN corpus of news articles to generate Turkish word vectors.
+to generate the English word vectors, along with the BOUN corpus of news articles to generate Turkish word vectors.
 
 \subsection{Features}
 
@@ -164,24 +166,24 @@ is equal to the product of the likelihoods of each word-to-parent transition wit
 Therefore, the likelihood of the segmentation of the training data is the product of the likelihoods
 of each correct word-to-parent transition for every morphological chain in the training data.
 
-Therefore, the likelihood of the training data is given as such:
+We want to maximize the likelihood of the document $D$, where $w$ is a word in $D$ and $c$ is
+its segmentation:
 \begin{equation}
-    \prod_{w, c \in D} P(c | w) = \prod_{w, c \in D}\left(\prod_{w', z' \in MC(w)} P(z | w)\right)
+    \prod_{w, c \in D} P(c | w) = \prod_{w, c \in D}\left(\prod_{w', z' \in MC(w, c)} P(z' | w')\right)
 \end{equation}
+where $MC(w)$ represents the parents and transitions in the morphological chain of $w$ going up to the root,
+constructed using its segmentation.
 
-We want to maximize the probability of the document $D$, where $w$ is a word in $D$ and $c$ is
-its segmentation. As above, we 
-%TODO better explanation
-
-Therefore, the log-likelihood of our training data can be expressed as
+We can simplify this product by letting $TR(D)$ be all pairs of words and parents implied in each of
+the morphological chains of all words in $D$ ---
+then, the log-likelihood of our training data can be expressed as
 \begin{equation}
     \begin{split}
-        L_S(\theta; D) &= \log{\prod_{w, z \in D} P(z|w)} \\
-                       &= \sum_{w, z \in D} \Bigg(\theta \cdot \phi(w, z) \Bigg. \\
+        L_S(\theta; D) &= \log{\prod_{w, z \in TR(D)} P(z|w)} \\
+                       &= \sum_{w, z \in TR(D)} \Bigg(\theta \cdot \phi(w, z) \Bigg. \\
                        &\qquad\Bigg. - \log\left(\sum_{z' \in C(w)} e^{\theta \cdot \phi(w, z')} \right)\Bigg)
    \end{split}
 \end{equation}
-where $w, z$ represent every morphological chain transition implied in the training data.
 
 We can also express its gradient as such:
 \begin{equation}
@@ -223,14 +225,14 @@ we generate a set of possible parent candidates (from translation):
     C_2(w) = \bigcup_{w_t \in T_{ET}(w)}\left(\bigcup_{w_{tp} \in MP_T (w_t)} T_{TE}(w_{tp})\right)
 \end{equation}
 where $T_{ET}$ returns the set of possible Turkish translations
-for an english word; $MP_T$ returns the set of possible parents for some Turkish word,
-$T_{TE}$ returns the set of possible english translations for an english word,
+for an English word; $MP_T$ returns the set of possible parents for some Turkish word,
+$T_{TE}$ returns the set of possible English translations for an English word,
 and this potentially large set of candidates is pruned with heuristics judging
 how similar the candidate is to the original word. We then extend our original parent candidate
 with this parent candidate set.
 
 Additionally, we extend our feature set to include whether or not each candidate was
-generated by a turkish translation (a strong indicator for parent-ness) and how confident
+generated by a Turkish translation (a strong indicator for parent-ness) and how confident
 the Turkish model was in selecting a parent.
 
 \section{Experimental Validation}
@@ -261,18 +263,18 @@ full is 878k
         \begin{tabular}{ | l | l | l | l | l |}
             \hline
             Language & Method & Precision & Recall & F1 \\ \hline
-                     & Narasimhan & 0.807 & 0.722 & 0.762 \\ 
-                     & Unsupervised & -  & - & - \\ 
+                     & \citeauthor{Narasimhan15} & 0.807 & 0.722 & 0.762 \\ 
+                     & Unsupervised (Baseline) & -  & - & - \\ 
             English & Semi-supervised & - & - & - \\ 
                     & Two language unsupervised & - & - & - \\ 
                     & Two language semi-supervised & - & - & - \\ \hline
-                    & Narasimhan & 0.743 & 0.520 & 0.612 \\ 
-                    & Unsupervised & - & - & - \\ 
+                    & \citeauthor{Narasimhan15} & 0.743 & 0.520 & 0.612 \\ 
+                    & Unsupervised (Baseline) & - & - & - \\ 
             Turkish & Semi-supervised & - & - & -  \\ 
                     & Two language unsupervised  & - & - & -  \\ 
                     & Two language semi-supervised  & - & - & -  \\ \hline
         \end{tabular}
-        \caption{Results 'n shit TODO}
+        \caption{Accuracies of Various Models}
     \end{center}
 \end{table*}
 
@@ -283,18 +285,32 @@ full is 878k
             Language & \multicolumn{2}{|c|}{\textbf{Correct Segmentations}} & \multicolumn{3}{|c|}{\textbf{Incorrect Segmentations}}\\ \hline
                      & Word & Segmentation & Word & Predicted & Correct\\ \hline
             English & suburbanite & suburb/an/ite & provokingly & provok/ing/ly & provoking/ly  \\ 
-                    & buffeted & buffeted & -  & - & -\\ 
-                    & ewers' &  ewer/s/' & - & - & -\\ 
-                    & yowling & yowl/ing & - & -& - \\ 
-                    & Two language semi-supervised & - & - & - & -\\ \hline
-                    & Narasimhan & 0.743 & 0.520 & 0.612 & -\\ 
-                    & Unsupervised & - & - & - & -\\ 
-            Turkish & Semi-supervised & - & - & -  & -\\ 
-                    & Two language unsupervised  & - & - & -  & -\\ 
-                    & Two language semi-supervised  & - & - & -  & -\\ \hline
-        \end{tabular}
-        \caption{Results 'n shit TODO}
+                    & buffeted & buffet/ed & invalidated  & in/validat/ed & in/valid/at/ed \\ 
+                    & ewers' &  ewer/s/' & dutifully & dutiful/ly & duti/ful/ly\\ 
+                    & yowling & yowl/ing & ignominiously & ignominious/ly& ignomni/ous/ly \\ 
+            \hline
+                    & - & - & - & - & -\\ 
+            Turkish & - & - & - & - & -\\ 
+                    & - & - & - & - & -\\ 
+                    & - & - & - & - & -\\ \hline
+                    & - & - & - & -  & -\\ 
+                    & - & - & - & -  & -\\ 
+    English (dual-language) & - & - & - & -  & -\\ 
+                    & - & - & - & -  & -\\ 
+                    & - & - & - & -  & -\\ \hline
+                \end{tabular}
+        \caption{Examples of Correct and Incorrect Segmentations}
     \end{center}
 \end{table*}
+
+\section{Results}
+We found that utilizing information from the gold segmentations, we were able to substantially increase our
+performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% to 70.3\% with Turkish.
+
+We found that adding the additional Turkish candidates and features were actually detrimental to the 
+unsupervised case 
+
+\bibliography{paper}
+\bibliographystyle{plainnat}
 
 \end{document}
