@@ -51,20 +51,23 @@
 
 % TODO explain existing code
 \section{Introduction}
-The division of a word into morphemes--basic units of meaning---encodes information about
-something
+The division of a word into morphemes--smallest units with meaning---encodes information about both the structure
+of the word as well as its semantic meaning. Most work in the field looks at either orthographic information or
+semantic information. \citet{Narasimhan15} integrates these approaches by representing a word
+with a series of derivations from the base form of the word, thereby capturing both types of information in each derivation.
+At each step, the similarity across the derivation can be analyzed using both character similarity measures and semantic similarity measures.
+
 When performing morphological analysis, there are a few different cases to consider: words that share similar
-meaning but appear in diffrent syntactic contexts (``German"---``Germanic"), new words generated from
+meaning but appear in different syntactic contexts (``German"---``Germanic"), new words generated from
 the combination of two separate words (``bookcase"|``book"---``case"), words with dissimilar meaning but
-derived from one another ``insuffcient"---``sufficient"). In the first and last case, words are often related
-by the addition of preffixes, suffixes, and other affixes. This allows us to form morphological chains - which
+derived from one another ``insufficient"---``sufficient"). In the first and last case, words are often related
+by the addition of prefixes, suffixes, and other affixes. This allows us to form morphological chains - which
 link a base word to its derivative through a series of affixations.
-We wish to 
 
 %%TODO
 
 \section{Unsupervised Model}
-Our model builds on work done by \citet{Narasimhan15} in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
+Our model builds on work by \citeauthor{Narasimhan15} in constructing \emph{morphological chains} to model the morphological segmentation of words in a language in an unsupervised manner. The idea behind morphological chains is that complex words are constructed by attaching morphemes simpler words. Thus, complex words have words from which they are directly derived, which we call \emph{parent} words. Likewise, the derived word is a \emph{child} word. A morphological chain is a sequence of words such that consecutive pairs form a parent-child relationship. For example, the word \emph{unsustainable} can be constructed from \emph{sustain}, as demonstrated in the chain \emph{sustain} $\rightarrow$ \emph{sustainable} $\rightarrow$ \emph{unsustainable}. Words without parents are called \emph{base} words. In our example, \emph{sustain} is a base word.
 
 Since a parent word can have multiple children (e.g., \emph{play} $\rightarrow$ \emph{plays} and \emph{play} $\rightarrow$ \emph{played}), words can be part of multiple chains. Thus multiple chains can share segments.
 \citeauthor{Narasimhan15} makes use of this shared information by constructing a model which analyzes parent-child pairs.
@@ -118,7 +121,7 @@ Recall that in our model, we want to find weights $\theta$ for the feature vecto
     P(z|w) = \frac{e^{\theta\cdot\phi(w,z)}} {\sum_{z'\in C(w)} e^{\theta\cdot\phi(w,z')}}
 \end{equation}
 
-Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We use the EM-algorithm to iteratively maximize the likelihood over $\theta$ as given by
+Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We maximize the likelihood over $\theta$ as given by
 
 \begin{equation}
     \begin{split}
@@ -147,7 +150,7 @@ With a regularization term, this becomes
     \end{split}
 \end{equation}
 
-Our EM-algorithm will then operate on the log-likelihood, which takes the following form:
+Our algorithm operates on the log-likelihood, which takes the following form:
 
 \begin{equation}
     \begin{split}
@@ -171,7 +174,7 @@ This has the gradient given by
 We optimize $L_L(\theta; D)$ with its gradient using the LBFGS-B algorithm.
 
 \subsection{Prediction}
-The EM-algorithm yields an optimal $\theta^*$ of weights of the features generated from $D$. Then given a test word $w$, we can predict the probability of a given parent candidate $z$ by computing $P(z|w)=e^{\theta^*\cdot\phi(w,z)}$ as in \autoref{equ:prob_par}. To predict the parent of $w$, we pick the MLE candidate from parent candidates generated for $w$, which we can generate in the same way as we did while training.
+The algorithm yields an optimal $\theta^*$ of weights of the features generated from $D$. Then given a test word $w$, we can predict the probability of a given parent candidate $z$ by computing $P(z|w)=e^{\theta^*\cdot\phi(w,z)}$ as in \autoref{equ:prob_par}. To predict the parent of $w$, we pick the MLE candidate from parent candidates generated for $w$, which we can generate in the same way as we did while training.
 
 To generate a morphological chain for $w$, we recursively predict the MLE parent for $w$, then the MLE parent of that prediction, and so forth until the \emph{Stop} candidate is predicted. Together, this sequence forms our chain. A morphological segmentation can be constructed from the chain by splitting $w$ at every point corresponding to where each of the edges in the chain splits its child word.
 
@@ -300,6 +303,8 @@ from a morphological parser developed at Boğaziçi University. The Turkish word
 was obtained from a significantly smaller corpus---at 1 million words, compared
 to the English corpus of 18 million.
 
+The Turkish language contains characters like \c{c} and \u{g} which are not in the English alphabet. In computing with them and in our results below, we have preprocessed the Turkish texts to replace characters not found in English with a capitalized letter. (We convert all words to lowercase beforehand, so there are no ambiguous symbols.)
+
 \subsection{Evaluation Model}
 
 \begin{table*}
@@ -410,7 +415,7 @@ to the English corpus of 18 million.
         \end{axis}
     \end{tikzpicture}
     \label{fig:supervised}
-    \caption{Performance of semi-supervised model based on $\alpha$.}
+    \caption{Performance of the semi-supervised model based on $\alpha$.}
 \end{figure}
 
 We found that utilizing information from the gold segmentations, we were able to substantially increase our
