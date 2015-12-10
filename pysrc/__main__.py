@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     if args.twolang:
         MCCls = duolingo.TwoLangMorphoChain
-        with open('out_py/eWordToEParents.p') as f:
+        with open('data/eWordToEParents.p') as f:
             eWordToEparents = pickle.load(f)
             mc_args.append(eWordToEParents)
         filesuffix = '.twolang' + filesuffix
