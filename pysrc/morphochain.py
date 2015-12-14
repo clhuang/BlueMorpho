@@ -98,7 +98,7 @@ class MorphoChain(object):
             if affix in self.prefixNeighbours:
                 for n, score in self.prefixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
                     if n + parent in self.vocab:
-                        d['neighbours_COR_S'] = affix
+                        d['neighbours_COR_P'] = affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
