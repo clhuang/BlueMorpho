@@ -1,4 +1,4 @@
-# MorphoChain #
+# BlueMorpho #
 
 Author: Charlotte Chen, Calvin Huang, Brian Shimanuki, Karthik Narasimhan (karthikn@csail.mit.edu)
 
