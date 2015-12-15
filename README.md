@@ -1,36 +1,16 @@
 # MorphoChain #
 
-Author: Karthik Narasimhan (karthikn@csail.mit.edu)
+Author: Charlotte Chen, Calvin Huang, Brian Shimanuki, Karthik Narasimhan (karthikn@csail.mit.edu)
 
 ### Unsupervised Discovery of Morphological Chains ([TACL 2015](https://tacl2013.cs.columbia.edu/ojs/index.php/tacl/article/view/458)) ###
 
 * A model for unsupervised morphological analysis that integrates orthographic and semantic views of words.
+* Exteds Narasimhan's work with additional features, supervised learning, and (not very good) dual-language analyis.
+* Based on ([Morphochain](https://github.com/karthikncode/MorphoChain))
 * Model consistently outperforms three state-of-the-art baselines on the task of morphological segmentation on Arabic, English and Turkish.
 
 ### Download ###
-You can clone the repository and use the *production2* branch (default) for the latest code.
-
-### Dependencies (before Compiling) ###
-  1. This project uses the LBFGS-B algorithm for optimization (the jar files for the library are included in lib/). We, however, recommend you to download and install the lbfgsb_wrapper for Java from [here](https://github.com/mkobos/lbfgsb_wrapper) since there may be additional steps for you to take for installing on Mac OSX. At the end of the install, move the files *lbfgsb_wrapper-<version>.jar* and *liblbfgsb_wrapper.so* (or *liblbfgsb_wrapper.dylib* on OSX) into the lib/ directory.
-  2. External library: *commons-lang3-3.3.2.jar* (included in lib/)
-  3. Install the Junit framework following instructions in http://junit.org/ or using Maven.
-  4. Replace the path for `jdk.home.1.7` in the `build.properties` file with your local install.
-  5. (optional) Change `path.variable.maven_repository` in `build.properties` to your local maven repository if you wish to use your Maven installs.
-
-### Compile ###
-
-Use 'ant all' to compile on the terminal (requires ant version > 1.6).
-You can also directly import the entire directory into IntelliJ or Eclipse and compile using the GUI.
-
-### Sample Usage ###
-
-Here is an example of how to run the code from the home directory of the project. The output will contain the predicted segmentations for all the words in the test file. If you do not have gold segmentations
-to test against, you can just input a file with the word as its own segmentation (i.e. <word>:<word> instead of <word>:<segmentation> in each line of the file - see FORMATS.txt for details).
-```bash
-PARAMS_FILE=params.properties;
-OUT_FILE=output.txt;
-java -ea  -Djava.library.path=lib/ -classpath "./lib/*:./out/production/Morphology" Main $PARAMS_FILE >$OUT_FILE
-```
+You can clone the repository and use the *master* branch (default) for the latest code.
 
 ### Configuration ###
 Most parameters in the model can be changed in the file params.properties

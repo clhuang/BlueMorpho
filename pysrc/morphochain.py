@@ -97,10 +97,14 @@ class MorphoChain(object):
                     # # FIX: this is currently storing only the last prefix into d['diff']
                     # d['diffpre_' + prefix] = cos_sim
             if affix in self.prefixNeighbours:
+<<<<<<< Updated upstream
                 for n, score in self.prefixNeighbours[affix][:TOPNEIGHBOURS]:
                     if n + parent in self.vocab:
                         d['neighbours_COR_P'] = affix
                 for n, score in self.prefixNeighbours[affix][:TOPNEIGHBOURS]:
+=======
+                for n, score in self.prefixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
+>>>>>>> Stashed changes
                     if n + parent in self.vocab:
                         d['neighbours_COR_P'] = affix
         else:  # some sort of suffix
