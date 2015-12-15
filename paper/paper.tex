@@ -126,13 +126,13 @@ Recall that in our model, we want to find weights $\theta$ for the feature vecto
     P(z|w) = \frac{e^{\theta\cdot\phi(w,z)}} {\sum_{z'\in C(w)} e^{\theta\cdot\phi(w,z')}}
 \end{equation}
 
-Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We maximize the likelihood over $\theta$ as given by
+Let our set of observed words be $D$. We approach this by trying to maximize the likelihood of observing the words in $D$ from the space of all constructible strings from the alphabet, $\Sigma^*$. We maximize the log-likelihood over $\theta$ as given by
 
 \begin{equation}
     \begin{split}
-        L(\theta; D) &= \prod_{w^*\in D} P(w^*) \\
-        &= \prod_{w^*\in D} \sum_{z\in C(w^*)} P(w^*, z) \\
-        &= \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in\Sigma^*}\sum_{z\in C(w) e^{\theta\cdot\phi(w,z)}}} \\
+        L(\theta; D) &= \log \prod_{w^*\in D} P(w^*) \\
+        &= \log \prod_{w^*\in D} \sum_{z\in C(w^*)} P(w^*, z) \\
+        &= \log \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in\Sigma^*}\sum_{z\in C(w) e^{\theta\cdot\phi(w,z)}}} \\
     \end{split}
 \end{equation}
 
@@ -140,26 +140,26 @@ We cannot compute $L(\theta; D)$ directly since we cannot compute over all strin
 
 We use the method of Contrastive Estimation \citep{Smith05} and substitute the space of all strings $\Sigma^*$ with neighbors of each word, $N(w)$. Toward this end, we transpose pairs of consecutive letters of $w$ near both ends of the word. We also do both simultaneously. Together these form our set of neighbors for $w$. The neighbors form a proxy for $\Sigma^*$, and represent the set of strings we want to reduce the probability of seeing in our model because they are not observed. This has the benefit of providing contrast in the structure of words while not requiring the model to look at the entire $\Sigma^*$.
 
-With this substitution, we can formulate the contrastive likelihood as
+With this substitution, we can formulate the contrastive log-likelihood as
 
 \begin{equation}
-    L_C(\theta; D) = \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}}
+    L_C(\theta; D) = \log \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}}
 \end{equation}
 
 With a regularization term, this becomes
 
 \begin{equation}
     \begin{split}
-        L_C(\theta; D) &= \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}} \\
+        L_C(\theta; D) &= \log \prod_{w^*\in D} \frac{\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}} \\
         &\qquad - \lambda \|\theta\|^2
     \end{split}
 \end{equation}
 
-Our algorithm operates on the log-likelihood, which takes the following form:
+Simplifying, this becomes:
 
 \begin{equation}
     \begin{split}
-        L_L(\theta; D) &= \sum_{w^*\in D} \Bigg(\log \sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)} \Bigg.\\
+        L_C(\theta; D) &= \sum_{w^*\in D} \Bigg(\log \sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)} \Bigg.\\
         &\qquad\Bigg. -\log \sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)} \Bigg) \\
         &\qquad - \lambda \|\theta\|^2
     \end{split}
@@ -169,14 +169,14 @@ This has the gradient given by
 
 \begin{equation}
     \begin{split}
-        &\frac{\partial L_L(\theta; D)}{\partial \theta_j} \\
+        &\frac{\partial L_C(\theta; D)}{\partial \theta_j} \\
         &= \sum_{w^*\in D} \Bigg( \frac{\sum_{z\in C(w^*)} \phi_j(w^*,z)\cdot e^{\theta\cdot\phi(w^*,z)}} {\sum_{z\in C(w^*)} e^{\theta\cdot\phi(w^*,z)}} \Bigg. \\
         &\qquad -\frac{\sum_{w\in N(w^*)} \sum_{z\in C(w)} \phi_j(w,z)\cdot e^{\theta\cdot\phi(w,z)}} {\sum_{w\in N(w^*)} \sum_{z\in C(w)} e^{\theta\cdot\phi(w,z)}} \Bigg) \\
         &\qquad -2\lambda\theta_j
     \end{split}
 \end{equation}
 
-We optimize $L_L(\theta; D)$ with its gradient using the LBFGS-B algorithm.
+We optimize $L_C(\theta; D)$ with its gradient using the LBFGS-B algorithm.
 
 \subsection{Prediction}
 The algorithm yields an optimal $\theta^*$ of weights of the features generated from $D$. Then given a test word $w$, we can predict the probability of a given parent candidate $z$ by computing $P(z|w)=e^{\theta^*\cdot\phi(w,z)}$ as in \autoref{equ:prob_par}. To predict the parent of $w$, we pick the MLE candidate from parent candidates generated for $w$, which we can generate in the same way as we did while training.
@@ -333,12 +333,12 @@ that are correctly identified by our estimator.
             \hline
             Language & Method & Precision & Recall & F1 \\ \hline
                      & \citeauthor{Narasimhan15} & 0.807 & 0.722 & 0.762 \\ 
-                     & Unsupervised (Baseline) & 0.664  & 0.649 & 0.656 \\ 
-            English & Semi-supervised ($\alpha=15$) & 0.892 & 0.762 & 0.822 \\ 
-                    & Two language unsupervised & 0.432 & 0.652 & 0.520 \\ 
-                    & Two language semi-supervised & 0.449 & 0.759 & 0.564 \\ \hline
+                     & Unsupervised (Baseline) & 0.744  & 0.756 & 0.750 \\ 
+            English & Semi-supervised ($\alpha=15$) & 0.892 & 0.777 & 0.831 \\ 
+                    & Two language unsupervised & 0.502 & 0.682 & 0.578 \\ 
+                    & Two language semi-supervised & 0.519 & 0.789 & 0.623 \\ \hline
                     & \citeauthor{Narasimhan15} & 0.743 & 0.520 & 0.612 \\ 
-            Turkish & Unsupervised (Baseline) & 0.675 & 0.371 & 0.479 \\ 
+            Turkish & Unsupervised (Baseline) & 0.627 & 0.478 & 0.543 \\ 
                     & Semi-supervised ($\alpha=50$) & 0.763 & 0.642 & 0.697 \\ \hline
         \end{tabular}
         \caption{Accuracies of Various Models. For our model, we used the top 48000 English words in the wordlist,
@@ -379,15 +379,15 @@ that are correctly identified by our estimator.
                 ylabel=F-1 Score,
             ]
             \addplot coordinates {
-                (\engsmallw, 0.556)
-                (\engmedw, 0.656)
-                (\englargew, 0.383)
+                (\engsmallw, 0.626)
+                (\engmedw, 0.746)
+                (\englargew, 0.603)
             };
             \addlegendentry{English}
             \addplot coordinates {
                 (\tursmallw, 0.124)
-                (\turmedw, 0.479)
-                (\turlargew, 0.520)
+                (\turmedw, 0.529)
+                (\turlargew, 0.570)
             };
             \addlegendentry{Turkish}
         \end{axis}
@@ -408,9 +408,9 @@ that are correctly identified by our estimator.
                 legend pos=south east,
             ]
             \addplot coordinates {
-                (0, 0.656)
-                (0.1, 0.683)
-                (1, 0.752)
+                (0, 0.716)
+                (0.1, 0.753)
+                (1, 0.782)
                 (3, 0.803)
                 (5, 0.815)
                 (8, 0.824)
@@ -421,8 +421,8 @@ that are correctly identified by our estimator.
             };
             \addlegendentry{English}
             \addplot coordinates {
-                (0, 0.479)
-                (0.1, 0.580)
+                (0, 0.549)
+                (0.1, 0.620)
                 (1, 0.663)
                 (3, 0.668)
                 (5, 0.670)
@@ -439,7 +439,7 @@ that are correctly identified by our estimator.
 \end{figure}
 
 We found that utilizing information from the gold segmentations, we were able to substantially increase our
-performance, from an accuracy of 65.5\% to 81.7\% with English, and from 47.9\% to 69.7\% with Turkish.
+performance, from an accuracy of 75\% to 81.7\% with English, and from 54.3\% to 69.7\% with Turkish.
 This is a substantial but expected increase; observing the unsupervised model reveals that it performs
 many segmentations with nonexistent affixes, which are rectified by providing input about known affixes.
 
