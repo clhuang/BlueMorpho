@@ -14,6 +14,8 @@ from pysrc import accuracy
 ParentTransformation = namedtuple('ParentTransformation',
                                   ['parentword', 'transformtype', 'olangconfidence'])
 
+TOPNEIGHBOURS = 1
+
 
 class ParentType():
     STOP = 'STOP'
@@ -23,7 +25,6 @@ class ParentType():
     DELETE = 'DELETE'
     REPEAT = 'REPEAT'
     OLANG = 'OLANG'
-    TOPNEIGHBOURS = 7
 
 
 class MorphoChain(object):
@@ -96,14 +97,12 @@ class MorphoChain(object):
                     # # FIX: this is currently storing only the last prefix into d['diff']
                     # d['diffpre_' + prefix] = cos_sim
             if affix in self.prefixNeighbours:
-                for n, score in self.prefixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
-<<<<<<< HEAD
-                    if parent + n in self.vocab:
-                        d['neighbours_COR_P'] = affix
-=======
+                for n, score in self.prefixNeighbours[affix][:TOPNEIGHBOURS]:
                     if n + parent in self.vocab:
-                        d['neighbours_COR_S'] = affix
->>>>>>> 59c4ea172c51744c10a8d522b8a4673050403870
+                        d['neighbours_COR_P'] = affix
+                for n, score in self.prefixNeighbours[affix][:TOPNEIGHBOURS]:
+                    if n + parent in self.vocab:
+                        d['neighbours_COR_P'] = affix
         else:  # some sort of suffix
             if z.transformtype == ParentType.SUFFIX:
                 affix = w[lenparent:]
@@ -127,7 +126,7 @@ class MorphoChain(object):
                     # d['diffsuff_' + suffix ] = cos_sim
             # # affix correlation TODO check for each case
             if affix in self.suffixNeighbours:
-                for n, score in self.suffixNeighbours[affix][:ParentType.TOPNEIGHBOURS]:
+                for n, score in self.suffixNeighbours[affix][:TOPNEIGHBOURS]:
                     if w[:-len(affix)] + n in self.vocab:
                         d['neighbours_COR_S'] = affix
          # parent is not in word list
@@ -305,7 +304,12 @@ class MorphoChain(object):
         elif candidate[1] == ParentType.PREFIX:
             return word[:-p_len] + SEG_SEP + self.genSeg(parent)
         else:
-            raise Exception((word, parent))
+            lencommonprefix = 0
+            for a, b in zip(word, parent):
+                if a != b:
+                    break
+                lencommonprefix += 1
+            return word[lencommonprefix:] + self.genSeg(parent)[:lencommonprefix]
 
     def similarity(self, w1, w2):
         if w1 not in self.wordvectors or w2 not in self.wordvectors:
