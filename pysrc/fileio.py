@@ -27,6 +27,21 @@ def read_wordcounts(filename, dump = False):
     return d
 
 
+def read_somewords(filename, dump = False):
+    """
+    Returns a dict of words and their corresponding counts.
+    """
+    d = Counter()
+    with open(filename) as f:
+        for line in f:
+            word = line.split()
+            word = word[0]
+            d[word] = 200
+    if dump:
+        pickle.dump(d, open("data/somewords.p", "wb"))
+    return d
+
+
 # Reads from morpho challege
 def readCorpus(filename, dump=None):
     f = open(filename, 'r')
@@ -75,6 +90,8 @@ def read_dictionary(filename):
                 tur_to_eng[tur].append(eng)
     return eng_to_tur, tur_to_eng
 
+
+#read_somewords('data/somewords.txt', True)
 
 if __name__=="__main__":
     for lang in ('eng', 'tur'):

@@ -85,7 +85,7 @@ def genAffixesListOpt(wordlist, wordvectors):
             prefixes[prefix] *= .1
     suff_list = [s[0] for s in suffixes.most_common(100)]
     pref_list = [p[0] for p in prefixes.most_common(100)]
-    return suff_list, pref_list
+    return suff_list, pref_list, dict(suffixvector), dict(prefixvector)
 
 
 def genAffixCorrelation(affixes, wordlist, fname='../data/prefix_corr3.p', suff=True):
@@ -138,17 +138,23 @@ filename_v = 'data/%s-wordvectors200_%s.bin' % (entr[lang], size)
 wordlist = fileio.read_wordcounts(filename_w)
 wordvectors = fileio.load_wordvectors(filename_v, binary=True)
 
-suffixes, prefixes = genAffixesListOpt(wordlist, wordvectors)
+suffixes, prefixes, suffixvector, prefixvector = genAffixesListOpt(wordlist, wordvectors)
 print suffixes
 print prefixes
 with open('data/%s_suffix_list.p' % lang, 'wb') as f:
     pickle.dump(suffixes, f)
 with open('data/%s_prefix_list.p' % lang, 'wb') as f:
     pickle.dump(prefixes, f)
-with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
-    suffixes = pickle.load(f)
-with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
-    prefixes = pickle.load(f)
+with open('data/%s_suffix_wv.p' % lang, 'wb') as f:
+    pickle.dump(suffixvector, f)
+with open('data/%s_prefix_wv.p' % lang, 'wb') as f:
+    pickle.dump(prefixvector, f)
+
+
+#with open('data/%s_suffix_list_gold.p' % lang, 'wb') as f:
+    #suffixes = pickle.load(f)
+#with open('data/%s_prefix_list_gold.p' % lang, 'wb') as f:
+    #prefixes = pickle.load(f)
 
 
 #genAffixCorrelation(suffixes, wordlist, fname='data/%s_suffix_corr_gold.p'%lang, suff=True)

@@ -19,8 +19,15 @@ def get_prefixes_affixes(lang='eng'):
         prefixes_corr = pickle.load(f)
     with open('data/%s_suffix_corr2.p' % lang, 'rb') as f:
         suffixes_corr = pickle.load(f)
+#    with open('data/%s_suffix_wv.p' % lang, 'rb') as f:
+        #suffixvector = pickle.load(f)
+    #with open('data/%s_prefix_wv.p' % lang, 'rb') as f:
+        #prefixvector = pickle.load(f)
+
+
     affixes = (prefixes, suffixes)
     affix_corr = (prefixes_corr, suffixes_corr)
+#    affix_wv = (prefixvector, suffixvector)
     return affixes, affix_corr
 
 
